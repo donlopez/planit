@@ -8,7 +8,7 @@ import { AuthProvider } from "react-oidc-context";
 const cognitoAuthConfig = {
   authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_m61QXqQmo",  // Cognito User Pool URL
   client_id: "55b82psg55qubr8q6dmbrliq2u",  // Client ID from Cognito
-  redirect_uri: "https://main.d27hasdhmsk331.amplifyapp.com/",  // The redirect URI for the app
+  redirect_uri: "https://eventplanner.lopezbio.com",  // The redirect URI for the app
   response_type: "code",  // Response type for authorization code
   scope: "phone openid email",  // Scopes to request
 };
