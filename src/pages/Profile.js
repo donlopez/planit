@@ -18,41 +18,46 @@ export default function Profile() {
   // Handle profile data fetch
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data"; // Updated URL
-      const userId = auth.user?.profile?.sub;
+      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data"; // Updated API URL
+      const userId = auth.user?.profile?.sub;  // Get user ID from the authentication context
 
-      fetch(`${apiUrl}?userId=${userId}`)
-        .then((response) => response.json())
+      fetch(`${apiUrl}?userId=${userId}`)  // Use this line to make the GET request
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+          }
+          return response.json(); // If successful, parse the response as JSON
+        })
         .then((data) => {
-          setUserData(data);
-          setLoading(false);
+          setUserData(data);  // If successful, store the data
+          setLoading(false);   // No more loading needed once data is fetched
         })
         .catch((err) => {
-          setError(err.message);
-          setLoading(false);
+          setError(`Fetch error: ${err.message}`); // Handle any errors that occurred during fetch
+          setLoading(false); // Even if there's an error, stop the loading state
         });
     }
-  }, [auth.isAuthenticated, auth.user]);
+  }, [auth.isAuthenticated, auth.user]);  // Trigger re-fetching when auth status or user changes
 
   // Handle form data change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,    
+      [name]: value,
     }));
   };
 
   // Handle form submission to update profile
   const handleSubmit = (e) => {
     e.preventDefault();
-    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data/${userData.id}`; // Updated URL
+    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data/${userData.id}`;
     fetch(apiUrl, {
-      method: "PUT",
+      method: "PUT",  // PUT request for updating the profile
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(formData),  // Send the updated form data as JSON
     })
       .then((response) => response.json())
       .then((data) => {
