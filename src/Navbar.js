@@ -1,4 +1,4 @@
-import { Link, useMatch, useResolvedPath } from "react-router-dom"; 
+import { Link, useMatch, useResolvedPath } from "react-router-dom";
 
 export default function Navbar({ auth }) {
   const signOutRedirect = () => {
@@ -16,20 +16,14 @@ export default function Navbar({ auth }) {
       <ul>
         <CustomLink to="/planit">Planit</CustomLink>
         <CustomLink to="/profile">Profile</CustomLink>
-        {/* Conditionally render sign-in or sign-out button */}
+        {/* Conditionally render sign-in or sign-out button as links */}
         {auth.isAuthenticated ? (
           <li>
-            <button onClick={() => auth.removeUser()}>Sign out</button>
+            <Link to="#" onClick={() => auth.removeUser()} className="nav-link">Sign out</Link>
           </li>
         ) : (
           <li>
-            <button onClick={() => auth.signinRedirect()}>Sign in</button>
-          </li>
-        )}
-        {/* Add the sign-out redirect button */}
-        {auth.isAuthenticated && (
-          <li>
-            <button onClick={signOutRedirect}>Sign out (Redirect)</button>
+            <Link to="#" onClick={() => auth.signinRedirect()} className="nav-link">Sign in</Link>
           </li>
         )}
       </ul>
