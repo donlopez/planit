@@ -18,7 +18,7 @@ export default function Profile() {
   // Handle profile data fetch
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/data";
+      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data"; // Updated URL
       const userId = auth.user?.profile?.sub;
 
       fetch(`${apiUrl}?userId=${userId}`)
@@ -39,14 +39,14 @@ export default function Profile() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: value,    
     }));
   };
 
   // Handle form submission to update profile
   const handleSubmit = (e) => {
     e.preventDefault();
-    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/data/${userData.id}`;
+    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data/${userData.id}`; // Updated URL
     fetch(apiUrl, {
       method: "PUT",
       headers: {
