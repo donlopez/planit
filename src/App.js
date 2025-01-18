@@ -1,7 +1,9 @@
 import { useAuth } from "react-oidc-context";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function App() {
   const auth = useAuth();
+  const navigate = useNavigate(); // Initialize navigate
 
   // Sign-out redirection
   const signOutRedirect = () => {
@@ -23,13 +25,12 @@ function App() {
 
   // When the user is authenticated
   if (auth.isAuthenticated) {
+    // Navigate to home page after authentication
+    navigate("/home");
+
     return (
       <div>
         <h2>Welcome, {auth.user?.profile?.email}!</h2>
-        <pre> ID Token: {auth.user?.id_token} </pre>
-        <pre> Access Token: {auth.user?.access_token} </pre>
-        <pre> Refresh Token: {auth.user?.refresh_token} </pre>
-        
         <button onClick={() => auth.removeUser()}>Sign out</button>
       </div>
     );
