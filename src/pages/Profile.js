@@ -18,26 +18,27 @@ export default function Profile() {
   // Handle profile data fetch
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data"; // Updated API URL
-      const userId = auth.user?.profile?.sub;  // Get user ID from the authentication context
-
-      fetch(`${apiUrl}?userId=${userId}`)  // Use this line to make the GET request
+      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data";
+      const userId = auth.user?.profile?.sub;
+  
+      fetch(`${apiUrl}?userId=${userId}`)
         .then((response) => {
           if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
+            throw new Error(`Network response was not ok: ${response.statusText} (status code: ${response.status})`);
           }
-          return response.json(); // If successful, parse the response as JSON
+          return response.json();
         })
         .then((data) => {
-          setUserData(data);  // If successful, store the data
-          setLoading(false);   // No more loading needed once data is fetched
+          setUserData(data);
+          setLoading(false);
         })
         .catch((err) => {
-          setError(`Fetch error: ${err.message}`); // Handle any errors that occurred during fetch
-          setLoading(false); // Even if there's an error, stop the loading state
+          console.error("Fetch error:", err);  // This will give more details about the error in the console
+          setError(`Fetch error: ${err.message}`);
+          setLoading(false);
         });
     }
-  }, [auth.isAuthenticated, auth.user]);  // Trigger re-fetching when auth status or user changes
+  }, [auth.isAuthenticated, auth.user]);    // Trigger re-fetching when auth status or user changes
 
   // Handle form data change
   const handleChange = (e) => {
