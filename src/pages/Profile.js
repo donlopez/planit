@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "react-oidc-context"; // Assuming you're using OIDC for auth
 
 export default function Profile() {
-  const auth = useAuth();
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -11,68 +9,48 @@ export default function Profile() {
     dob: "",
   });
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const [message, setMessage] = useState(null);
 
-  const apiUrl =
-    "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+  const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
-  // Fetch user data on component mount
   useEffect(() => {
-    if (!auth.isAuthenticated) {
-      // User is not logged in, do nothing
-      return;
-    }
+    // Simulate getting email from Cognito
+    const email = "juliolopez9260@gmail.com";
 
-    const email = auth.user?.profile?.email;
-    if (!email) {
-      setError("Unable to retrieve email from authentication.");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true); // Start loading
     fetch(`${apiUrl}?email=${email}`)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
+          throw new Error(`Failed to fetch user data: ${response.status}`);
         }
         return response.json();
       })
       .then((data) => {
-        setUserData(data.data); // Populate user data
+        setUserData(data.data);
         setFormData({
           first_name: data.data.first_name || "",
           last_name: data.data.last_name || "",
           phone: data.data.phone || "",
-          dob: data.data.dob || "",
+          dob: data.data.dob || "", // Populate if `dob` exists
         });
-        setLoading(false); // Stop loading
       })
       .catch((err) => {
-        console.error("Error fetching data:", err);
-        setError("Failed to fetch user data.");
-        setLoading(false); // Stop loading
+        console.error("Error fetching user data:", err);
+        setError(err.message);
       });
-  }, [auth.isAuthenticated, auth.user]);
+  }, []);
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  // Handle form submission to update user data
   const handleSubmit = (e) => {
     e.preventDefault();
-    const email = auth.user?.profile?.email;
 
-    if (!email) {
-      setError("Unable to retrieve email from authentication.");
-      return;
-    }
-
-    setUpdating(true); // Start updating
+    const email = userData.email; // Assuming the email stays constant
     fetch(`${apiUrl}?email=${email}`, {
       method: "PUT",
       headers: {
@@ -82,91 +60,81 @@ export default function Profile() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to update: ${response.status}`);
+          throw new Error(`Failed to update profile: ${response.status}`);
         }
         return response.json();
       })
       .then((data) => {
-        console.log("Updated user data:", data);
-        alert("Profile updated successfully!");
-        setUserData({ ...userData, ...formData }); // Update displayed user data
-        setUpdating(false); // Stop updating
+        setMessage("Profile updated successfully!");
+        console.log("Profile updated:", data);
       })
       .catch((err) => {
         console.error("Error updating profile:", err);
-        setError("Failed to update profile.");
-        setUpdating(false); // Stop updating
+        setError(err.message);
       });
   };
 
-  if (!auth.isAuthenticated) {
-    return <p style={{ color: "red" }}>You need to log in to view this page.</p>;
-  }
-
-  if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+  if (!userData) return <p>Loading...</p>;
 
   return (
     <div>
       <h1>Profile</h1>
-      {userData ? (
-        <div>
-          <p>
-            <strong>Email:</strong> {userData.email}
-          </p>
-          <form onSubmit={handleSubmit}>
-            <label>
-              First Name:
-              <input
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                placeholder="Enter your first name"
-              />
-            </label>
-            <br />
-            <label>
-              Last Name:
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                placeholder="Enter your last name"
-              />
-            </label>
-            <br />
-            <label>
-              Phone:
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-              />
-            </label>
-            <br />
-            <label>
-              Date of Birth:
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      <p>
+        <strong>Email:</strong> {userData.email}
+      </p>
+      <form onSubmit={handleSubmit}>
+        <p>
+          <label>
+            First Name:
+            <input
+              type="text"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+            />
+          </label>
+        </p>
+        <p>
+          <label>
+            Last Name:
+            <input
+              type="text"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+            />
+          </label>
+        </p>
+        <p>
+          <label>
+            Phone:
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+          </label>
+        </p>
+        <p>
+          <label>
+            Date of Birth:
+            {userData.dob ? (
+              <span> {userData.dob}</span> // Display the existing DOB
+            ) : (
               <input
                 type="date"
                 name="dob"
                 value={formData.dob}
                 onChange={handleChange}
-                placeholder="yyyy-mm-dd"
               />
-            </label>
-            <br />
-            <button type="submit" disabled={updating}>
-              {updating ? "Updating..." : "Update Profile"}
-            </button>
-          </form>
-        </div>
-      ) : (
-        <p>No user data found.</p>
-      )}
+            )}
+          </label>
+        </p>
+        <button type="submit">Update Profile</button>
+      </form>
     </div>
   );
 }
