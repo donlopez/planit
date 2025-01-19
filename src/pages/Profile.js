@@ -47,7 +47,7 @@ export default function Profile() {
             first_name: data.data.first_name || "",
             last_name: data.data.last_name || "",
             phone: data.data.phone || "",
-            dob: data.data.dob || "",
+            dob: data.data.dob ? formatDOB(data.data.dob) : "", // Format DOB
           });
         }
       })
@@ -56,6 +56,14 @@ export default function Profile() {
         setError(err.message);
       });
   }, [auth.isAuthenticated, auth.user?.profile?.email]);
+
+  const formatDOB = (dob) => {
+    const date = new Date(dob);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -231,15 +239,15 @@ export default function Profile() {
             </label>
           </p>
           <p>
-            <label>
-              Date of Birth:
+            <strong>Date of Birth:</strong>{" "}
+            {userData.dob ? formatDOB(userData.dob) : (
               <input
                 type="date"
                 name="dob"
                 value={formData.dob}
                 onChange={handleChange}
               />
-            </label>
+            )}
           </p>
           <button type="submit">Update Profile</button>
         </form>
