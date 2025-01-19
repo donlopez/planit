@@ -1,87 +1,122 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "react-oidc-context"; // Import Cognito authentication context
+import { useAuth } from "react-oidc-context";
 
 export default function Profile() {
-  const auth = useAuth(); // Access Cognito user details
-  const [userData, setUserData] = useState(null); // Stores fetched user data
-  const [formData, setFormData] = useState({}); // Tracks form input values for updates
-  const [error, setError] = useState(null); // Tracks error state
-  const [loading, setLoading] = useState(true); // Tracks loading state
+  const auth = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+  });
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState("");
 
   const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
-  // Fetch user profile on component mount
+  // Fetch user data on load
   useEffect(() => {
-    const userId = 1; // Hardcoded for now, replace with `auth.user?.profile?.sub` when ready
-
-    fetch(`${apiUrl}?userId=${userId}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const cognitoEmail = auth.user?.profile?.email; // Email from Cognito
-        const updatedUserData = { ...data.data, email: cognitoEmail }; // Add Cognito email to data
-        setUserData(updatedUserData); // Set fetched data
-        setFormData(updatedUserData); // Pre-fill form for editing
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err);
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [auth.user]);
+    if (auth.isAuthenticated) {
+      const userId = 1; // Replace with dynamic userId if needed
+      fetch(`${apiUrl}?userId=${userId}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setUserData(data.data);
+          setFormData({
+            first_name: data.data?.first_name || "",
+            last_name: data.data?.last_name || "",
+            phone: data.data?.phone || "",
+          });
+        })
+        .catch((err) => {
+          console.error("Error fetching data:", err);
+          setError(err.message);
+        });
+    }
+  }, [auth.isAuthenticated]);
 
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  // Submit updated data to the database
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    fetch(`${apiUrl}?userId=${userData.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+  // Create a new user
+  const handleCreateUser = () => {
+    const email = auth.user?.profile?.email; // Get email from Cognito
+    fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email,
+        phone: formData.phone,
+      }),
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to update: ${response.status}`);
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        console.log("Profile updated:", data);
-        setUserData(formData); // Update local state with the new profile data
-        alert("Profile updated successfully!");
+        setMessage("User created successfully!");
+        console.log("User created:", data);
       })
       .catch((err) => {
-        console.error("Error updating profile:", err);
-        alert(`Error: ${err.message}`);
+        setError("Error creating user.");
+        console.error(err);
       });
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  // Update an existing user
+  const handleUpdateUser = () => {
+    const email = auth.user?.profile?.email; // Get email from Cognito
+    const userId = 1; // Replace with dynamic userId if needed
+    fetch(`${apiUrl}?userId=${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email,
+        phone: formData.phone,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setMessage("User updated successfully!");
+        console.log("User updated:", data);
+      })
+      .catch((err) => {
+        setError("Error updating user.");
+        console.error(err);
+      });
+  };
+
+  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+  if (!userData && !formData.first_name) return <p>Loading...</p>;
 
   return (
     <div>
       <h1>Profile</h1>
-      <form onSubmit={handleSubmit}>
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      <form>
         <label>
           First Name:
           <input
             type="text"
             name="first_name"
-            value={formData.first_name || ""}
+            value={formData.first_name}
             onChange={handleChange}
-            required
           />
         </label>
         <br />
@@ -90,35 +125,31 @@ export default function Profile() {
           <input
             type="text"
             name="last_name"
-            value={formData.last_name || ""}
+            value={formData.last_name}
             onChange={handleChange}
-            required
-          />
-        </label>
-        <br />
-        <label>
-          Email (from Cognito):
-          <input
-            type="email"
-            name="email"
-            value={formData.email || ""}
-            onChange={handleChange}
-            readOnly // Cognito email is read-only
           />
         </label>
         <br />
         <label>
           Phone:
           <input
-            type="tel"
+            type="text"
             name="phone"
-            value={formData.phone || ""}
+            value={formData.phone}
             onChange={handleChange}
-            required
           />
         </label>
         <br />
-        <button type="submit">Update Profile</button>
+        <button
+          type="button"
+          onClick={handleCreateUser}
+          style={{ marginRight: "10px" }}
+        >
+          Create User
+        </button>
+        <button type="button" onClick={handleUpdateUser}>
+          Update User
+        </button>
       </form>
     </div>
   );
