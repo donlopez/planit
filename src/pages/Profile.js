@@ -18,7 +18,7 @@ export default function Profile() {
   // Handle profile data fetch
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data";  // Update API URL with the correct one
+      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev";  // Update API URL with the correct one
       const userId = auth.user?.profile?.sub;
 
       // Fetch data from the API
@@ -53,7 +53,7 @@ export default function Profile() {
   // Handle form submission to update profile
   const handleSubmit = (e) => {
     e.preventDefault();
-    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/data${userData.id}`;  // Correct URL with user ID
+    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev${userData.id}`;  // Correct URL with user ID
     fetch(apiUrl, {
       method: "PUT",  // PUT request for updating the profile
       headers: {
