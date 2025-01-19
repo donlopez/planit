@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 
 export default function Profile() {
-  const auth = useAuth();
-  const [userData, setUserData] = useState(null);
+  const auth = useAuth(); // Get authentication context
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -14,32 +13,6 @@ export default function Profile() {
 
   const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
-  // Fetch user data on load
-  useEffect(() => {
-    if (auth.isAuthenticated) {
-      const userId = 1; // Replace with dynamic userId if needed
-      fetch(`${apiUrl}?userId=${userId}`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          setUserData(data.data);
-          setFormData({
-            first_name: data.data?.first_name || "",
-            last_name: data.data?.last_name || "",
-            phone: data.data?.phone || "",
-          });
-        })
-        .catch((err) => {
-          console.error("Error fetching data:", err);
-          setError(err.message);
-        });
-    }
-  }, [auth.isAuthenticated]);
-
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,9 +22,15 @@ export default function Profile() {
     }));
   };
 
-  // Create a new user
+  // Handle creating a new user
   const handleCreateUser = () => {
     const email = auth.user?.profile?.email; // Get email from Cognito
+    if (!email) {
+      setError("Unable to fetch email from Cognito.");
+      return;
+    }
+
+    // Send POST request to create a new user
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -60,55 +39,37 @@ export default function Profile() {
       body: JSON.stringify({
         first_name: formData.first_name,
         last_name: formData.last_name,
-        email,
+        email, // Automatically include Cognito email
         phone: formData.phone,
       }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to create user: ${response.status}`);
+        }
+        return response.json();
+      })
       .then((data) => {
         setMessage("User created successfully!");
         console.log("User created:", data);
+        // Reset form fields
+        setFormData({
+          first_name: "",
+          last_name: "",
+          phone: "",
+        });
       })
       .catch((err) => {
-        setError("Error creating user.");
+        setError(`Error creating user: ${err.message}`);
         console.error(err);
       });
   };
-
-  // Update an existing user
-  const handleUpdateUser = () => {
-    const email = auth.user?.profile?.email; // Get email from Cognito
-    const userId = 1; // Replace with dynamic userId if needed
-    fetch(`${apiUrl}?userId=${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email,
-        phone: formData.phone,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setMessage("User updated successfully!");
-        console.log("User updated:", data);
-      })
-      .catch((err) => {
-        setError("Error updating user.");
-        console.error(err);
-      });
-  };
-
-  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
-  if (!userData && !formData.first_name) return <p>Loading...</p>;
 
   return (
     <div>
-      <h1>Profile</h1>
+      <h1>Create Your Profile</h1>
       {message && <p style={{ color: "green" }}>{message}</p>}
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
       <form>
         <label>
           First Name:
@@ -117,6 +78,8 @@ export default function Profile() {
             name="first_name"
             value={formData.first_name}
             onChange={handleChange}
+            placeholder="Enter your first name"
+            required
           />
         </label>
         <br />
@@ -127,6 +90,8 @@ export default function Profile() {
             name="last_name"
             value={formData.last_name}
             onChange={handleChange}
+            placeholder="Enter your last name"
+            required
           />
         </label>
         <br />
@@ -137,18 +102,13 @@ export default function Profile() {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            placeholder="Enter your phone number"
+            required
           />
         </label>
         <br />
-        <button
-          type="button"
-          onClick={handleCreateUser}
-          style={{ marginRight: "10px" }}
-        >
-          Create User
-        </button>
-        <button type="button" onClick={handleUpdateUser}>
-          Update User
+        <button type="button" onClick={handleCreateUser}>
+          Create Profile
         </button>
       </form>
     </div>
