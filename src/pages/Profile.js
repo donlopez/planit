@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 
 export default function Profile() {
-  const auth = useAuth(); // Get authentication state from Cognito
-  const [userData, setUserData] = useState(null); // Stores user profile data
+  const auth = useAuth(); // Authentication state from Cognito
+  const [userData, setUserData] = useState(null); // User profile data
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -15,20 +15,27 @@ export default function Profile() {
 
   const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
-  // Only fetch the user's profile if authenticated
+  const email = auth.user?.profile?.email; // Get email from Cognito
+
+  // Fetch or check for user profile when authenticated and email changes
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      const email = auth.user?.profile?.email; // Get email from Cognito
+    if (auth.isAuthenticated && email) {
+      // Fetch user profile from the database
       fetch(`${apiUrl}?email=${email}`)
         .then((response) => {
           if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.status}`);
+            if (response.status === 404) {
+              // No profile found; user needs to create one
+              setUserData(null);
+              return null;
+            }
+            throw new Error(`Failed to fetch profile: ${response.status}`);
           }
           return response.json();
         })
         .then((data) => {
-          if (data.data) {
-            setUserData(data.data);
+          if (data && data.data) {
+            setUserData(data.data); // Populate profile data
             setFormData({
               first_name: data.data.first_name || "",
               last_name: data.data.last_name || "",
@@ -42,7 +49,7 @@ export default function Profile() {
           setError(err.message);
         });
     }
-  }, [auth.isAuthenticated]);
+  }, [auth.isAuthenticated, email, apiUrl]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -55,7 +62,6 @@ export default function Profile() {
 
   // Handle creating or updating the user profile
   const handleSubmit = () => {
-    const email = auth.user?.profile?.email; // Get email from Cognito
     if (!email) {
       setError("Unable to fetch email from Cognito.");
       return;
@@ -79,7 +85,7 @@ export default function Profile() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to ${method === "POST" ? "create" : "update"} user: ${response.status}`);
+          throw new Error(`Failed to ${method === "POST" ? "create" : "update"} profile: ${response.status}`);
         }
         return response.json();
       })
@@ -120,7 +126,7 @@ export default function Profile() {
           <h3>Edit Profile</h3>
         </div>
       ) : (
-        <p>Creating a new profile for email: {auth.user?.profile?.email}</p>
+        <p>Creating a new profile for email: {email}</p>
       )}
 
       <form>
