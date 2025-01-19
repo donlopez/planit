@@ -20,9 +20,10 @@ export default function Profile() {
   // Fetch or check for user profile when authenticated and email changes
   useEffect(() => {
     if (auth.isAuthenticated && email) {
-      // Fetch user profile from the database
+      console.log("Fetching profile for email:", email); // Debugging log
       fetch(`${apiUrl}?email=${email}`)
         .then((response) => {
+          console.log("Response status:", response.status); // Debugging log
           if (!response.ok) {
             if (response.status === 404) {
               // No profile found; user needs to create one
@@ -49,7 +50,7 @@ export default function Profile() {
           setError(err.message);
         });
     }
-  }, [auth.isAuthenticated, email, apiUrl]);
+  }, [auth.isAuthenticated, email]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -84,6 +85,7 @@ export default function Profile() {
       }),
     })
       .then((response) => {
+        console.log("Submit response status:", response.status); // Debugging log
         if (!response.ok) {
           throw new Error(`Failed to ${method === "POST" ? "create" : "update"} profile: ${response.status}`);
         }
@@ -105,7 +107,6 @@ export default function Profile() {
       });
   };
 
-  // Render the profile or authentication message
   if (!auth.isAuthenticated) {
     return <p style={{ color: "red" }}>You must log in to view your profile.</p>;
   }
