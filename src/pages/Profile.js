@@ -1,47 +1,47 @@
-import { useState, useEffect } from "react";  // Import useEffect here
+import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 
 export default function Profile() {
   const auth = useAuth();
   const [userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    username: "",
-    password: "",
-  });
 
-  // Handle profile data fetch
+  // Fetch user profile data
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev";  // Update API URL with the correct one
+      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
       const userId = auth.user?.profile?.sub;
 
-      // Fetch data from the API
       fetch(`${apiUrl}?userId=${userId}`)
         .then((response) => {
           if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText} (status code: ${response.status})`);
+            throw new Error(`Failed to fetch data: ${response.statusText} (status ${response.status})`);
           }
           return response.json();
         })
         .then((data) => {
-          setUserData(data);
+          setUserData(data.data); // Assume API response format includes a `data` object
+          setFormData({
+            first_name: data.data.first_name,
+            last_name: data.data.last_name,
+            email: data.data.email,
+            phone: data.data.phone,
+            username: data.data.username,
+            password: "", // Do not prepopulate password
+          });
           setLoading(false);
         })
         .catch((err) => {
-          console.error("Fetch error:", err);  // This will give more details about the error in the console
-          setError(`Fetch error: ${err.message}`);
+          console.error("Error fetching profile data:", err);
+          setError(err.message);
           setLoading(false);
         });
     }
-  }, [auth.isAuthenticated, auth.user]);  // Trigger re-fetching when auth status or user changes
+  }, [auth.isAuthenticated, auth.user]);
 
-  // Handle form data change
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -50,70 +50,101 @@ export default function Profile() {
     }));
   };
 
-  // Handle form submission to update profile
+  // Handle profile update
   const handleSubmit = (e) => {
     e.preventDefault();
-    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev${userData.id}`;  // Correct URL with user ID
+    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?userId=${userData.id}`;
+
     fetch(apiUrl, {
-      method: "PUT",  // PUT request for updating the profile
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData),  // Send the updated form data as JSON
+      body: JSON.stringify(formData),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to update profile: ${response.statusText} (status ${response.status})`);
+        }
+        return response.json();
+      })
       .then((data) => {
-        console.log("Profile updated:", data);
+        console.log("Profile updated successfully:", data);
+        alert("Profile updated successfully!");
       })
       .catch((err) => {
         console.error("Error updating profile:", err);
+        alert(`Failed to update profile: ${err.message}`);
       });
   };
 
-  // Render loading, error, and profile data
+  // Render the component
   return (
     <div>
       <h1>Profile</h1>
       {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
-      {userData && (
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {userData && formData && (
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="first_name"
-            value={formData.first_name || userData.first_name}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="last_name"
-            value={formData.last_name || userData.last_name}
-            onChange={handleChange}
-          />
-          <input
-            type="email"
-            name="email"
-            value={formData.email || userData.email}
-            onChange={handleChange}
-          />
-          <input
-            type="phone"
-            name="phone"
-            value={formData.phone || userData.phone}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="username"
-            value={formData.username || userData.username}
-            onChange={handleChange}
-          />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div>
+            <label>First Name:</label>
+            <input
+              type="text"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Last Name:</label>
+            <input
+              type="text"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Email:</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Phone:</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Username:</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Password:</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+          </div>
           <button type="submit">Update Profile</button>
         </form>
       )}
