@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "react-oidc-context"; // Assuming you're using this for authentication
 
 export default function Profile() {
+  const auth = useAuth(); // Fetch authentication state
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -14,8 +16,16 @@ export default function Profile() {
   const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
   useEffect(() => {
-    // Simulate getting email from Cognito
-    const email = "juliolopez9260@gmail.com";
+    if (!auth.isAuthenticated) {
+      setError("You must be logged in to view your profile.");
+      return;
+    }
+
+    const email = auth.user?.profile?.email; // Fetch email dynamically from authentication
+    if (!email) {
+      setError("Unable to fetch email. Please log in again.");
+      return;
+    }
 
     fetch(`${apiUrl}?email=${email}`)
       .then((response) => {
@@ -30,14 +40,14 @@ export default function Profile() {
           first_name: data.data.first_name || "",
           last_name: data.data.last_name || "",
           phone: data.data.phone || "",
-          dob: data.data.dob || "", // Populate if `dob` exists
+          dob: data.data.dob || "",
         });
       })
       .catch((err) => {
         console.error("Error fetching user data:", err);
         setError(err.message);
       });
-  }, []);
+  }, [auth.isAuthenticated, auth.user?.profile?.email]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,7 +60,12 @@ export default function Profile() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const email = userData.email; // Assuming the email stays constant
+    if (!auth.isAuthenticated) {
+      setError("You must be logged in to update your profile.");
+      return;
+    }
+
+    const email = auth.user?.profile?.email; // Use email dynamically
     fetch(`${apiUrl}?email=${email}`, {
       method: "PUT",
       headers: {
@@ -74,7 +89,8 @@ export default function Profile() {
       });
   };
 
-  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!auth.isAuthenticated) return <p>Please log in to view your profile.</p>;
   if (!userData) return <p>Loading...</p>;
 
   return (
@@ -82,7 +98,7 @@ export default function Profile() {
       <h1>Profile</h1>
       {message && <p style={{ color: "green" }}>{message}</p>}
       <p>
-        <strong>Email:</strong> {userData.email}
+        <strong>Email:</strong> {auth.user?.profile?.email}
       </p>
       <form onSubmit={handleSubmit}>
         <p>
@@ -122,7 +138,7 @@ export default function Profile() {
           <label>
             Date of Birth:
             {userData.dob ? (
-              <span> {userData.dob}</span> // Display the existing DOB
+              <span> {userData.dob}</span> // Show existing DOB
             ) : (
               <input
                 type="date"
