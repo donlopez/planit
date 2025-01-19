@@ -11,49 +11,46 @@ export default function Profile() {
     dob: "",
   });
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const apiUrl =
     "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
   // Fetch user data on component mount
   useEffect(() => {
-    if (!auth.isAuthenticated) {
-      // If the user is not authenticated, do not attempt to fetch data
-      return;
-    }
+    if (auth.isAuthenticated) {
+      const email = auth.user?.profile?.email;
 
-    const email = auth.user?.profile?.email;
-    if (!email) {
-      setError("Unable to retrieve email from authentication.");
-      setLoading(false);
-      return;
-    }
+      if (!email) {
+        setError("Unable to retrieve email from authentication.");
+        setLoading(false);
+        return;
+      }
 
-    setLoading(true); // Start loading
-    fetch(`${apiUrl}?email=${email}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Fetched user data:", data);
-        setUserData(data.data); // Populate user data
-        setFormData({
-          first_name: data.data.first_name || "",
-          last_name: data.data.last_name || "",
-          phone: data.data.phone || "",
-          dob: data.data.dob || "",
+      fetch(`${apiUrl}?email=${email}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Fetched user data:", data);
+          setUserData(data.data); // Populate user data
+          setFormData({
+            first_name: data.data.first_name || "",
+            last_name: data.data.last_name || "",
+            phone: data.data.phone || "",
+            dob: data.data.dob || "",
+          });
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching data:", err);
+          setError("Failed to fetch user data.");
+          setLoading(false);
         });
-        setLoading(false); // Stop loading
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err);
-        setError("Failed to fetch user data.");
-        setLoading(false); // Stop loading
-      });
+    }
   }, [auth.isAuthenticated, auth.user]);
 
   // Handle form input changes
@@ -95,10 +92,6 @@ export default function Profile() {
         setError("Failed to update profile.");
       });
   };
-
-  if (!auth.isAuthenticated) {
-    return <p style={{ color: "red" }}>You need to log in to view this page.</p>;
-  }
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
@@ -160,7 +153,7 @@ export default function Profile() {
           </form>
         </div>
       ) : (
-        <p>No user data found.</p>
+        <p>Creating a new profile for email: {auth.user?.profile?.email}</p>
       )}
     </div>
   );
