@@ -3,45 +3,49 @@ import { useAuth } from "react-oidc-context";
 
 export default function Profile() {
   const auth = useAuth();
-  const [userData, setUserData] = useState(null);
-  const [formData, setFormData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null); // Holds user data fetched from API
+  const [loading, setLoading] = useState(true); // Tracks loading state
+  const [error, setError] = useState(null); // Holds error messages
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    username: "",
+    password: "",
+  }); // Tracks form data for updates
 
-  // Fetch user profile data
+  // Fetch user profile data from the API
   useEffect(() => {
     if (auth.isAuthenticated) {
-      const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
-      const userId = auth.user?.profile?.sub;
+      const apiUrl =
+        "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+      const userId = auth.user?.profile?.sub; // User ID from authentication context
 
+      // Fetch data from the API
       fetch(`${apiUrl}?userId=${userId}`)
         .then((response) => {
           if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.statusText} (status ${response.status})`);
+            throw new Error(
+              `Network response was not ok: ${response.statusText} (status code: ${response.status})`
+            );
           }
           return response.json();
         })
         .then((data) => {
-          setUserData(data.data); // Assume API response format includes a `data` object
-          setFormData({
-            first_name: data.data.first_name,
-            last_name: data.data.last_name,
-            email: data.data.email,
-            phone: data.data.phone,
-            username: data.data.username,
-            password: "", // Do not prepopulate password
-          });
-          setLoading(false);
+          setUserData(data.data); // Set fetched user data
+          setFormData({ ...data.data, password: "" }); // Populate form data, excluding password
+          setLoading(false); // Stop loading
         })
         .catch((err) => {
           console.error("Error fetching profile data:", err);
-          setError(err.message);
+          setError(`Error: ${err.message}`);
           setLoading(false);
         });
     }
   }, [auth.isAuthenticated, auth.user]);
 
-  // Handle form field changes
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -50,7 +54,7 @@ export default function Profile() {
     }));
   };
 
-  // Handle profile update
+  // Submit updated profile data to the API
   const handleSubmit = (e) => {
     e.preventDefault();
     const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?userId=${userData.id}`;
@@ -64,7 +68,9 @@ export default function Profile() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to update profile: ${response.statusText} (status ${response.status})`);
+          throw new Error(
+            `Failed to update profile: ${response.statusText} (status code: ${response.status})`
+          );
         }
         return response.json();
       })
@@ -74,17 +80,17 @@ export default function Profile() {
       })
       .catch((err) => {
         console.error("Error updating profile:", err);
-        alert(`Failed to update profile: ${err.message}`);
+        alert(`Error: ${err.message}`);
       });
   };
 
-  // Render the component
+  // Render the Profile page
   return (
     <div>
       <h1>Profile</h1>
       {loading && <p>Loading...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {userData && formData && (
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {userData && (
         <form onSubmit={handleSubmit}>
           <div>
             <label>First Name:</label>
