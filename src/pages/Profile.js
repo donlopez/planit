@@ -15,6 +15,7 @@ export default function Profile() {
 
   const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
 
+  // Only fetch the user's profile if authenticated
   useEffect(() => {
     if (auth.isAuthenticated) {
       const email = auth.user?.profile?.email; // Get email from Cognito
@@ -98,7 +99,11 @@ export default function Profile() {
       });
   };
 
-  // Render the profile form
+  // Render the profile or authentication message
+  if (!auth.isAuthenticated) {
+    return <p style={{ color: "red" }}>You must log in to view your profile.</p>;
+  }
+
   return (
     <div>
       <h1>Profile</h1>
