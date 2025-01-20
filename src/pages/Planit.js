@@ -2,10 +2,16 @@ import { useState } from "react";
 
 export default function Planit() {
   const [formData, setFormData] = useState({
+    venueName: "",
+    address: "",
+    maxCapacity: "",
+    availability: 1,
     eventName: "",
-    date: "",
-    location: "",
-    description: "",
+    eventDate: "",
+    startTime: "",
+    endTime: "",
+    guestCount: "",
+    details: "",
   });
 
   const handleChange = (e) => {
@@ -15,14 +21,75 @@ export default function Planit() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Event created:", formData);
-    // Add your API call here to save the event to the database
+
+    fetch("https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to create event: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Event created successfully:", data);
+        alert("Event and Venue created successfully!");
+        setFormData({
+          venueName: "",
+          address: "",
+          maxCapacity: "",
+          availability: 1,
+          eventName: "",
+          eventDate: "",
+          startTime: "",
+          endTime: "",
+          guestCount: "",
+          details: "",
+        });
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+        alert("Failed to create event. Please try again.");
+      });
   };
 
   return (
     <div>
       <h1>Create Event</h1>
       <form onSubmit={handleSubmit}>
+        <label>
+          Venue Name:
+          <input
+            type="text"
+            name="venueName"
+            value={formData.venueName}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <br />
+        <label>
+          Address:
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+          />
+        </label>
+        <br />
+        <label>
+          Max Capacity:
+          <input
+            type="number"
+            name="maxCapacity"
+            value={formData.maxCapacity}
+            onChange={handleChange}
+          />
+        </label>
+        <br />
         <label>
           Event Name:
           <input
@@ -35,34 +102,55 @@ export default function Planit() {
         </label>
         <br />
         <label>
-          Date:
+          Event Date:
           <input
             type="date"
-            name="date"
-            value={formData.date}
+            name="eventDate"
+            value={formData.eventDate}
             onChange={handleChange}
             required
           />
         </label>
         <br />
         <label>
-          Location:
+          Start Time:
           <input
-            type="text"
-            name="location"
-            value={formData.location}
+            type="time"
+            name="startTime"
+            value={formData.startTime}
             onChange={handleChange}
             required
           />
         </label>
         <br />
         <label>
-          Description:
-          <textarea
-            name="description"
-            value={formData.description}
+          End Time:
+          <input
+            type="time"
+            name="endTime"
+            value={formData.endTime}
             onChange={handleChange}
             required
+          />
+        </label>
+        <br />
+        <label>
+          Guest Count:
+          <input
+            type="number"
+            name="guestCount"
+            value={formData.guestCount}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <br />
+        <label>
+          Details:
+          <textarea
+            name="details"
+            value={formData.details}
+            onChange={handleChange}
           ></textarea>
         </label>
         <br />
