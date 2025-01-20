@@ -15,6 +15,7 @@ export default function Profile() {
     });
 
     useEffect(() => {
+        // Fetch profile only if the user is authenticated
         if (auth.isAuthenticated) {
             const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
@@ -22,6 +23,7 @@ export default function Profile() {
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
                     if (response.status === 404) {
+                        // If user not found, treat as a new user
                         setIsNewUser(true);
                         setLoading(false);
                     } else if (!response.ok) {
@@ -53,10 +55,16 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
-    
+
         const payload = { ...formData, email: userEmail };
         console.log("Payload being sent:", payload); // Debugging the payload
-    
+
+        // Ensure all required fields are filled
+        if (!payload.first_name || !payload.last_name || !payload.email || !payload.phone || !payload.dob) {
+            setError("All fields are required. Please fill in all fields.");
+            return;
+        }
+
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -71,13 +79,13 @@ export default function Profile() {
             .then((data) => {
                 setIsNewUser(false);
                 setUserData(data);
+                setError(null); // Clear errors
             })
             .catch((err) => {
                 console.error("Error creating profile:", err.message);
                 setError(err.message);
             });
     };
-    
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
@@ -87,7 +95,7 @@ export default function Profile() {
             <h1>Profile</h1>
             {isNewUser ? (
                 <div>
-                    <p>It seems you're new here! Please complete your profile:</p>
+                    <p>Welcome! Please complete your profile:</p>
                     <form>
                         <label>
                             First Name:
