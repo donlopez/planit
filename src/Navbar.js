@@ -21,7 +21,7 @@ export default function Navbar({ auth }) {
       </Link>
       <ul>
         <CustomLink to="/planit">Planit</CustomLink>
-        <CustomLink to="/profile">Profile</CustomLink>
+        <CustomLink to="/myevents">My Events</CustomLink> {/* New link */}
         <CustomLink to="/profile">Profile</CustomLink>
         {/* Conditionally render sign-in or sign-out button as links */}
         {auth.isAuthenticated ? (
@@ -51,4 +51,3 @@ function CustomLink({ to, children, ...props }) {
     </li>
   );
 }
-
