@@ -53,11 +53,14 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
-
+    
+        const payload = { ...formData, email: userEmail };
+        console.log("Payload being sent:", payload); // Debugging the payload
+    
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, email: userEmail }),
+            body: JSON.stringify(payload),
         })
             .then((response) => {
                 if (!response.ok) {
@@ -70,9 +73,11 @@ export default function Profile() {
                 setUserData(data);
             })
             .catch((err) => {
+                console.error("Error creating profile:", err.message);
                 setError(err.message);
             });
     };
+    
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
