@@ -1,5 +1,5 @@
-import { useAuth } from "react-oidc-context"; 
-import { useEffect, useState } from "react";  // Import useState and useEffect for data fetching
+import { useAuth } from "react-oidc-context";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
     const auth = useAuth();
@@ -10,26 +10,42 @@ export default function Profile() {
     useEffect(() => {
         // Only fetch if authenticated
         if (auth.isAuthenticated) {
-            const apiUrl = 'https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/data'; // Your API Gateway URL
-            const userId = auth.user?.profile?.sub;  // Use the user's sub (ID) to query the database
+            const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+            const userEmail = auth.user?.profile?.email;
+
+            if (!userEmail) {
+                setError("No email found in authentication data.");
+                setLoading(false);
+                return;
+            }
 
             // Fetch user profile from API Gateway
-            fetch(`${apiUrl}?userId=${userId}`)
-                .then((response) => response.json())
+            fetch(`${apiUrl}?email=${userEmail}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch user data: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then((data) => {
-                    setUserData(data);
+                    if (data.message === "User fetched successfully") {
+                        setUserData(data.data);
+                    } else {
+                        setError(data.message || "Unknown error.");
+                    }
                     setLoading(false);
                 })
                 .catch((err) => {
                     setError(err.message);
                     setLoading(false);
                 });
+        } else {
+            setLoading(false);
         }
     }, [auth.isAuthenticated, auth.user]);
 
-    // Handle loading, error, and display the data
     if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error}</p>;
+    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
     return (
         <div>
@@ -37,8 +53,10 @@ export default function Profile() {
             {userData ? (
                 <div>
                     <p><strong>Email:</strong> {userData.email}</p>
-                    <p><strong>Name:</strong> {userData.first_name} {userData.last_name}</p>
-                    {/* Display more fields as per your database */}
+                    <p><strong>First Name:</strong> {userData.first_name}</p>
+                    <p><strong>Last Name:</strong> {userData.last_name}</p>
+                    <p><strong>Phone:</strong> {userData.phone}</p>
+                    <p><strong>Date of Birth:</strong> {userData.dob ? new Date(userData.dob).toLocaleDateString() : "Not set"}</p>
                 </div>
             ) : (
                 <p>No profile information available.</p>
