@@ -53,7 +53,7 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
-
+    
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ export default function Profile() {
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error("Failed to create profile");
+                    throw new Error(`Failed to create profile: ${response.status}`);
                 }
                 return response.json();
             })
@@ -72,7 +72,7 @@ export default function Profile() {
             .catch((err) => {
                 setError(err.message);
             });
-    };
+    };    
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
