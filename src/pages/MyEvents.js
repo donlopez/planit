@@ -1,40 +1,51 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function MyEvents() {
   const [events, setEvents] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch events from the database for the authenticated user
-    fetch("https://your-api-endpoint/events") // Replace with your endpoint
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch events: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => setEvents(data.events))
-      .catch((err) => setError(err.message));
-  }, []);
+    // Replace with your API endpoint
+    const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+    const userEmail = "user@example.com"; // Replace with dynamic user email from authentication context
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(`${apiUrl}?email=${userEmail}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
+
+        const result = await response.json();
+        if (result.data && Array.isArray(result.data)) {
+          setEvents(result.data);
+        } else {
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setError(error.message);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   return (
     <div>
       <h1>My Events</h1>
-      {events.length === 0 ? (
-        <p>No events found.</p>
-      ) : (
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {events.length > 0 ? (
         <ul>
-          {events.map((event, index) => (
-            <li key={index}>
-              <h3>{event.name}</h3>
-              <p>Date: {event.date}</p>
-              <p>Location: {event.location}</p>
-              <p>Description: {event.description}</p>
+          {events.map((event) => (
+            <li key={event.id}>
+              <strong>{event.name}</strong> - {event.event_date} ({event.start_time} to {event.end_time})
+              <p>{event.details}</p>
             </li>
           ))}
         </ul>
+      ) : (
+        <p>No events found.</p>
       )}
     </div>
   );

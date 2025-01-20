@@ -1,63 +1,152 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function Planit() {
-    const [formData, setFormData] = useState({
-        venueName: "",
+  const [formData, setFormData] = useState({
+    venue: "",
+    address: "",
+    max_capacity: "",
+    event_name: "",
+    event_date: "",
+    start_time: "",
+    end_time: "",
+    guest_count: "",
+    details: "",
+  });
+
+  const [error, setError] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Replace with your API endpoint
+    const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          venue: formData.venue,
+          address: formData.address,
+          max_capacity: formData.max_capacity,
+          event_name: formData.event_name,
+          event_date: formData.event_date,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          guest_count: formData.guest_count,
+          details: formData.details,
+          email: "user@example.com", // Replace with dynamic user email from authentication context
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create event");
+      }
+
+      const result = await response.json();
+      alert(result.message);
+      setFormData({
+        venue: "",
         address: "",
-        maxCapacity: "",
-        eventName: "",
-        eventDate: "",
-        startTime: "",
-        endTime: "",
-        guestCount: "",
+        max_capacity: "",
+        event_name: "",
+        event_date: "",
+        start_time: "",
+        end_time: "",
+        guest_count: "",
         details: "",
-    });
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      setError(error.message);
+    }
+  };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        fetch("https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, userEmail: "user@example.com" }), // Replace with logged-in user email
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                alert("Event created successfully!");
-                setFormData({
-                    venueName: "",
-                    address: "",
-                    maxCapacity: "",
-                    eventName: "",
-                    eventDate: "",
-                    startTime: "",
-                    endTime: "",
-                    guestCount: "",
-                    details: "",
-                });
-            })
-            .catch((err) => alert("Error creating event"));
-    };
-
-    return (
-        <div>
-            <h1>Create Event</h1>
-            <form onSubmit={handleSubmit}>
-                <input type="text" name="venueName" placeholder="Venue Name" value={formData.venueName} onChange={handleChange} required />
-                <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} />
-                <input type="number" name="maxCapacity" placeholder="Max Capacity" value={formData.maxCapacity} onChange={handleChange} />
-                <input type="text" name="eventName" placeholder="Event Name" value={formData.eventName} onChange={handleChange} required />
-                <input type="date" name="eventDate" value={formData.eventDate} onChange={handleChange} required />
-                <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
-                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required />
-                <input type="number" name="guestCount" placeholder="Guest Count" value={formData.guestCount} onChange={handleChange} required />
-                <textarea name="details" placeholder="Event Details" value={formData.details} onChange={handleChange}></textarea>
-                <button type="submit">Create Event</button>
-            </form>
-        </div>
-    );
+  return (
+    <div>
+      <h1>Create Event</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="venue"
+          placeholder="Venue Name"
+          value={formData.venue}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="text"
+          name="address"
+          placeholder="Venue Address"
+          value={formData.address}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="number"
+          name="max_capacity"
+          placeholder="Max Capacity"
+          value={formData.max_capacity}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="text"
+          name="event_name"
+          placeholder="Event Name"
+          value={formData.event_name}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="date"
+          name="event_date"
+          value={formData.event_date}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="time"
+          name="start_time"
+          value={formData.start_time}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="time"
+          name="end_time"
+          value={formData.end_time}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="number"
+          name="guest_count"
+          placeholder="Guest Count"
+          value={formData.guest_count}
+          onChange={handleInputChange}
+          required
+        />
+        <textarea
+          name="details"
+          placeholder="Event Details"
+          value={formData.details}
+          onChange={handleInputChange}
+          required
+        ></textarea>
+        <button type="submit">Create Event</button>
+      </form>
+    </div>
+  );
 }
