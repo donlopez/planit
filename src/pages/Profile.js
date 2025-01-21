@@ -6,7 +6,7 @@ export default function Profile() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isNewUser, setIsNewUser] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
@@ -16,49 +16,24 @@ export default function Profile() {
 
     useEffect(() => {
         if (auth.isAuthenticated) {
-            console.log("User authenticated, fetching profile...");
             const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
-            const cognitoUsername = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
-
-            console.log("Cognito Username:", cognitoUsername);
 
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
-                    if (response.status === 404) {
-                        console.log("User not found in database. Marking as new user.");
-                        setIsNewUser(true);
-                        setFormData((prev) => ({ ...prev, username: cognitoUsername }));
-                        setLoading(false);
-                    } else if (!response.ok) {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            setLoading(false);
+                            setError("Profile not found. Please complete your profile.");
+                        }
                         throw new Error(`Failed to fetch user data: ${response.status}`);
-                    } else {
-                        return response.json();
                     }
+                    return response.json();
                 })
                 .then((data) => {
                     if (data) {
-                        console.log("Fetched User Data:", data.data);
-
-                        const dbUsername = data.data.username;
-                        if (!dbUsername || dbUsername !== cognitoUsername) {
-                            console.log("Updating username in database...");
-                            fetch(`${apiUrl}?email=${userEmail}`, {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ username: cognitoUsername }),
-                            })
-                                .then((updateResponse) => {
-                                    if (!updateResponse.ok) {
-                                        console.error("Failed to update username in the database.");
-                                    } else {
-                                        setUserData({ ...data.data, username: cognitoUsername });
-                                    }
-                                })
-                                .catch((err) => console.error("Error updating username:", err));
-                        } else {
-                            setUserData(data.data);
-                        }
+                        setUserData(data.data);
+                        setFormData(data.data); // Populate the form with user data
                     }
                     setLoading(false);
                 })
@@ -68,7 +43,6 @@ export default function Profile() {
                     setLoading(false);
                 });
         } else {
-            console.log("User not authenticated.");
             setLoading(false);
         }
     }, [auth.isAuthenticated, auth.user]);
@@ -78,30 +52,36 @@ export default function Profile() {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleProfileCreation = () => {
+    const handleSave = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
 
-        console.log("Creating profile for:", { ...formData, email: userEmail });
-
-        fetch(apiUrl, {
-            method: "POST",
+        fetch(`${apiUrl}?email=${userEmail}`, {
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, email: userEmail }),
+            body: JSON.stringify({
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                phone: formData.phone,
+            }),
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error(`Failed to create profile: ${response.status}`);
+                    throw new Error(`Failed to update profile: ${response.status}`);
                 }
                 return response.json();
             })
             .then(() => {
-                setIsNewUser(false);
-                setUserData({ ...formData, email: userEmail });
-                setError(null);
+                setUserData((prev) => ({
+                    ...prev,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    phone: formData.phone,
+                }));
+                setIsEditing(false);
             })
             .catch((err) => {
-                console.error("Error creating profile:", err.message);
+                console.error("Error updating profile:", err.message);
                 setError(err.message);
             });
     };
@@ -112,66 +92,66 @@ export default function Profile() {
     return (
         <div>
             <h1>Profile</h1>
-            {isNewUser ? (
+            {userData && (
                 <div>
-                    <p>Welcome! Please complete your profile:</p>
-                    <form>
-                        <label>
-                            First Name:
-                            <input
-                                type="text"
-                                name="first_name"
-                                value={formData.first_name}
-                                onChange={handleInputChange}
-                            />
-                        </label>
-                        <br />
-                        <label>
-                            Last Name:
-                            <input
-                                type="text"
-                                name="last_name"
-                                value={formData.last_name}
-                                onChange={handleInputChange}
-                            />
-                        </label>
-                        <br />
-                        <label>
-                            Phone:
-                            <input
-                                type="text"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                            />
-                        </label>
-                        <br />
-                        <label>
-                            Date of Birth:
-                            <input
-                                type="date"
-                                name="dob"
-                                value={formData.dob}
-                                onChange={handleInputChange}
-                            />
-                        </label>
-                        <br />
-                        <button type="button" onClick={handleProfileCreation}>
-                            Create Profile
-                        </button>
-                    </form>
+                    <p><strong>Email:</strong> {userData.email}</p>
+                    <p><strong>Date of Birth:</strong> {userData.dob ? new Date(userData.dob).toLocaleDateString() : "Not set"}</p>
+                    {isEditing ? (
+                        <div>
+                            <label>
+                                First Name:
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    value={formData.first_name}
+                                    onChange={handleInputChange}
+                                />
+                            </label>
+                            <br />
+                            <label>
+                                Last Name:
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    value={formData.last_name}
+                                    onChange={handleInputChange}
+                                />
+                            </label>
+                            <br />
+                            <label>
+                                Phone:
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleInputChange}
+                                />
+                            </label>
+                            <br />
+                            <button type="button" onClick={handleSave}>
+                                Save
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setFormData(userData); // Reset the form data to original values
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <div>
+                            <p><strong>First Name:</strong> {userData.first_name}</p>
+                            <p><strong>Last Name:</strong> {userData.last_name}</p>
+                            <p><strong>Phone:</strong> {userData.phone}</p>
+                            <button type="button" onClick={() => setIsEditing(true)}>
+                                Edit Profile
+                            </button>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                userData && (
-                    <div>
-                        <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || "Not set"}</p>
-                        <p><strong>First Name:</strong> {userData.first_name}</p>
-                        <p><strong>Last Name:</strong> {userData.last_name}</p>
-                        <p><strong>Phone:</strong> {userData.phone}</p>
-                        <p><strong>Date of Birth:</strong> {userData.dob ? new Date(userData.dob).toLocaleDateString() : "Not set"}</p>
-                    </div>
-                )
             )}
         </div>
     );
