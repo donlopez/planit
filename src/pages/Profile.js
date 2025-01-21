@@ -16,7 +16,7 @@ export default function Profile() {
 
     useEffect(() => {
         if (auth.isAuthenticated) {
-            const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+            const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
 
             fetch(`${apiUrl}?email=${userEmail}`)
@@ -57,7 +57,7 @@ export default function Profile() {
     };
 
     const handleProfileUpdate = () => {
-        const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
+        const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
 
         fetch(`${apiUrl}?email=${userEmail}`, {

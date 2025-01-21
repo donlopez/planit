@@ -1,147 +1,182 @@
-import { useAuth } from "react-oidc-context";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function Profile() {
-    const auth = useAuth();
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isEditable, setIsEditable] = useState(false);
+export default function Planit() {
     const [formData, setFormData] = useState({
-        first_name: "",
-        last_name: "",
-        phone: "",
-        username: "",
+        name: "",
+        event_date: "",
+        start_time: "",
+        end_time: "",
+        guest_count: "",
+        details: "",
+        venue_name: "",
+        address: "",
+        max_capacity: "",
+        created_by: 27, // Replace with dynamic user ID if needed
     });
 
-    useEffect(() => {
-        if (auth.isAuthenticated) {
-            const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
-            const userEmail = auth.user?.profile?.email;
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
-            fetch(`${apiUrl}?email=${userEmail}`)
-                .then((response) => {
-                    if (response.status === 404) {
-                        setError("User not found");
-                        setLoading(false);
-                    } else if (!response.ok) {
-                        throw new Error(`Failed to fetch user data: ${response.status}`);
-                    } else {
-                        return response.json();
-                    }
-                })
-                .then((data) => {
-                    if (data) {
-                        setUserData(data.data);
-                        setFormData({
-                            first_name: data.data.first_name,
-                            last_name: data.data.last_name,
-                            phone: data.data.phone,
-                            username: data.data.username,
-                        });
-                    }
-                    setLoading(false);
-                })
-                .catch((err) => {
-                    setError(err.message);
-                    setLoading(false);
-                });
-        } else {
-            setLoading(false);
-        }
-    }, [auth.isAuthenticated, auth.user]);
-
+    // Handle input changes and update the form data
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleProfileUpdate = () => {
-        const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
-        const userEmail = auth.user?.profile?.email;
+    // Handle form submission
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
 
-        fetch(`${apiUrl}?email=${userEmail}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`Failed to update profile: ${response.status}`);
+        // Check if required fields are filled
+        if (!formData.name || !formData.venue_name) {
+            setError("Event Name and Venue Name are required.");
+            return;
+        }
+
+        try {
+            // Send a POST request to Lambda to create an event
+            const response = await fetch(
+                " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function", // Replace with your Lambda function URL
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
                 }
-                return response.json();
-            })
-            .then(() => {
-                setIsEditable(false);
-                setUserData({ ...userData, ...formData });
-                setError(null);
-            })
-            .catch((err) => {
-                setError(err.message);
-            });
-    };
+            );
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+            // Check if the response was successful
+            if (response.ok) {
+                setSuccess("Event created successfully!");
+                setError(null); // Clear any error messages
+                setFormData({
+                    name: "",
+                    event_date: "",
+                    start_time: "",
+                    end_time: "",
+                    guest_count: "",
+                    details: "",
+                    venue_name: "",
+                    address: "",
+                    max_capacity: "",
+                    created_by: 27, // Reset created_by field
+                });
+            } else {
+                throw new Error(`Failed to create event: ${response.status}`);
+            }
+        } catch (err) {
+            setError(err.message);
+            setSuccess(null); // Clear success message if an error occurs
+        }
+    };
 
     return (
         <div>
-            <h1>Profile</h1>
-            {userData && (
+            <h1>Create a New Event</h1>
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {success && <p style={{ color: "green" }}>{success}</p>}
+            <form onSubmit={handleFormSubmit}>
                 <div>
-                    <p><strong>Email:</strong> {userData.email}</p>
-                    <p><strong>Date of Birth:</strong> {userData.dob ? new Date(userData.dob).toLocaleDateString() : "Not set"}</p>
                     <label>
-                        First Name:
+                        Event Name:
                         <input
                             type="text"
-                            name="first_name"
-                            value={formData.first_name}
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            disabled={!isEditable}
+                            required
                         />
                     </label>
-                    <br />
-                    <label>
-                        Last Name:
-                        <input
-                            type="text"
-                            name="last_name"
-                            value={formData.last_name}
-                            onChange={handleInputChange}
-                            disabled={!isEditable}
-                        />
-                    </label>
-                    <br />
-                    <label>
-                        Phone:
-                        <input
-                            type="text"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            disabled={!isEditable}
-                        />
-                    </label>
-                    <br />
-                    <label>
-                        Username:
-                        <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            disabled={!isEditable}
-                        />
-                    </label>
-                    <br />
-                    {!isEditable ? (
-                        <button onClick={() => setIsEditable(true)}>Edit Profile</button>
-                    ) : (
-                        <button onClick={handleProfileUpdate}>Save Changes</button>
-                    )}
                 </div>
-            )}
+                <div>
+                    <label>
+                        Event Date:
+                        <input
+                            type="date"
+                            name="event_date"
+                            value={formData.event_date}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Start Time:
+                        <input
+                            type="time"
+                            name="start_time"
+                            value={formData.start_time}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        End Time:
+                        <input
+                            type="time"
+                            name="end_time"
+                            value={formData.end_time}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Guest Count:
+                        <input
+                            type="number"
+                            name="guest_count"
+                            value={formData.guest_count}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Event Details:
+                        <textarea
+                            name="details"
+                            value={formData.details}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Venue Name:
+                        <input
+                            type="text"
+                            name="venue_name"
+                            value={formData.venue_name}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Venue Address:
+                        <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        Max Capacity:
+                        <input
+                            type="number"
+                            name="max_capacity"
+                            value={formData.max_capacity}
+                            onChange={handleInputChange}
+                        />
+                    </label>
+                </div>
+                <button type="submit">Add Event</button>
+            </form>
         </div>
     );
 }
