@@ -23,8 +23,7 @@ export default function Profile() {
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
                     if (response.status === 404) {
-                        setIsNewUser(true); // User doesn't exist in the database
-                        setFormData({ username: cognitoUsername }); // Set Cognito username for new user
+                        setIsNewUser(true);
                         setLoading(false);
                     } else if (!response.ok) {
                         throw new Error(`Failed to fetch user data: ${response.status}`);
@@ -36,24 +35,27 @@ export default function Profile() {
                     if (data) {
                         const dbUsername = data.data.username;
 
-                        // Update database username if different
-                        if (!dbUsername || dbUsername !== cognitoUsername) {
+                        // Check if the Cognito username differs from the database username
+                        if (cognitoUsername !== dbUsername) {
+                            // Update the database username to match Cognito
                             fetch(`${apiUrl}?email=${userEmail}`, {
                                 method: "PUT",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ username: cognitoUsername }),
+                                body: JSON.stringify({
+                                    username: cognitoUsername,
+                                }),
                             })
                                 .then((response) => {
                                     if (!response.ok) {
-                                        console.error("Failed to update username in the database.");
+                                        console.error("Failed to update username in database.");
                                     } else {
-                                        setUserData({ ...data.data, username: cognitoUsername });
+                                        console.log("Username updated in database to match Cognito.");
                                     }
                                 })
                                 .catch((err) => console.error("Error updating username:", err));
-                        } else {
-                            setUserData(data.data); // Set user data
                         }
+
+                        setUserData(data.data);
                     }
                     setLoading(false);
                 })
@@ -75,11 +77,23 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
+        const username = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
+
+        const payload = {
+            ...formData,
+            email: userEmail,
+            username,
+        };
+
+        if (!payload.first_name || !payload.last_name || !payload.phone || !payload.dob || !payload.username) {
+            setError("All fields are required. Please fill in all fields.");
+            return;
+        }
 
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, email: userEmail }),
+            body: JSON.stringify(payload),
         })
             .then((response) => {
                 if (!response.ok) {
@@ -89,7 +103,7 @@ export default function Profile() {
             })
             .then(() => {
                 setIsNewUser(false);
-                setUserData({ ...formData, email: userEmail });
+                setUserData({ ...formData, email: userEmail, username });
                 setError(null);
             })
             .catch((err) => {
@@ -100,6 +114,8 @@ export default function Profile() {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+
+    const cognitoUsername = auth.user?.profile?.preferred_username || auth.user?.profile?.email.split("@")[0];
 
     return (
         <div>
@@ -157,7 +173,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || "Not set"}</p>
+                        <p><strong>Username:</strong> {userData.username || cognitoUsername}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
