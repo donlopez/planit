@@ -21,12 +21,9 @@ export default function Navbar({ auth }) {
       </Link>
       <ul>
         <CustomLink to="/planit">Planit</CustomLink>
-        <CustomLink to="/myevents">My Events</CustomLink> {/* New link */}
         <CustomLink to="/profile">Profile</CustomLink>
-        {/* Conditionally render sign-in or sign-out button as links */}
         {auth.isAuthenticated ? (
           <li>
-            {/* Use signOutRedirect on click */}
             <Link to="#" onClick={signOutRedirect} className="nav-link">Sign out</Link>
           </li>
         ) : (

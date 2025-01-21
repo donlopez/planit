@@ -3,7 +3,6 @@ import Navbar from "./Navbar"; // Navigation bar component
 import Home from "./pages/Home"; // Home page for guests
 import Planit from "./pages/Planit"; // Page to create events
 import Profile from "./pages/Profile"; // User profile page
-import MyEvents from "./pages/MyEvents"; // New page for user's events
 import { Route, Routes, Navigate } from "react-router-dom"; // For routing
 
 function App() {
@@ -37,10 +36,6 @@ function App() {
           <Route
             path="/profile"
             element={auth.isAuthenticated ? <Profile /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/myevents"
-            element={auth.isAuthenticated ? <MyEvents /> : <Navigate to="/" />}
           />
         </Routes>
       </div>

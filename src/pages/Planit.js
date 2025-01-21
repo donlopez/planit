@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "react-oidc-context";
 
 export default function Planit() {
@@ -16,6 +16,7 @@ export default function Planit() {
         created_by: "", // Will be set dynamically based on the authenticated user
     });
 
+    const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
@@ -24,6 +25,42 @@ export default function Planit() {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+
+    // Memoize the fetchEvents function to avoid unnecessary re-creations
+    const fetchEvents = useCallback(async () => {
+        try {
+            const email = auth.user?.profile?.email; // Get the user's email from auth
+            if (!email) {
+                setError("User is not authenticated or email is missing.");
+                return;
+            }
+
+            const response = await fetch(
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${email}`
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch events: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (result?.data) {
+                setEvents(result.data);
+            } else {
+                setError("No events available.");
+            }
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        }
+    }, [auth.user?.profile?.email]); // Add email to the dependency array
+
+    // Fetch events when the component loads or when authentication state changes
+    useEffect(() => {
+        if (auth.isAuthenticated) {
+            fetchEvents(); // Fetch events when the component is mounted
+        }
+    }, [auth.isAuthenticated, fetchEvents]); // Add fetchEvents as a dependency
 
     // Handle form submission
     const handleFormSubmit = async (e) => {
@@ -69,6 +106,9 @@ export default function Planit() {
                     max_capacity: "",
                     created_by: "", // Reset created_by field
                 });
+
+                // Re-fetch events after creating a new one
+                fetchEvents();
             } else {
                 throw new Error(`Failed to create event: ${response.status}`);
             }
@@ -83,6 +123,8 @@ export default function Planit() {
             <h1>Create a New Event</h1>
             {error && <p style={{ color: "red" }}>{error}</p>}
             {success && <p style={{ color: "green" }}>{success}</p>}
+
+            {/* Event Creation Form */}
             <form onSubmit={handleFormSubmit}>
                 <div>
                     <label>
@@ -186,6 +228,28 @@ export default function Planit() {
                 </div>
                 <button type="submit">Add Event</button>
             </form>
+
+            <h2>Your Events</h2>
+            {events.length > 0 ? (
+                <ul>
+                    {events.map((event) => (
+                        <li key={event.eventId}>
+                            <p>
+                                <strong>Name:</strong> {event.eventName}
+                            </p>
+                            <p>
+                                <strong>Date:</strong>{" "}
+                                {new Date(event.event_date).toLocaleDateString()}
+                            </p>
+                            <p>
+                                <strong>Details:</strong> {event.details}
+                            </p>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No events available.</p>
+            )}
         </div>
     );
 }
