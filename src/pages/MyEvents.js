@@ -17,15 +17,19 @@ export default function MyEvents() {
                 return;
             }
 
-            const response = await fetch(
-                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${email}` // Use email as the identifier
-            );
+            // Construct the API URL
+            const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${email}`;
+            console.log("Fetching events from API:", apiUrl); // Debugging log
+
+            const response = await fetch(apiUrl); // Fetch events
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.status}`);
             }
 
             const result = await response.json();
+            console.log("API Response:", result); // Debugging log
+
             if (result?.data) {
                 setEvents(result.data);
             } else {
@@ -33,33 +37,17 @@ export default function MyEvents() {
             }
             setError(null);
         } catch (err) {
+            console.error("Error fetching events:", err); // Debugging log
             setError(err.message);
         }
-    }, [auth.user?.profile?.email]); // Memoize the fetchEvents function
-
-    // Delete event function
-    const deleteEvent = async (eventId) => {
-        try {
-            const response = await fetch(
-                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`,
-                { method: "DELETE" }
-            );
-            if (response.ok) {
-                setEvents(events.filter((event) => event.eventId !== eventId)); // Remove the deleted event from the state
-            } else {
-                throw new Error(`Failed to delete event: ${response.status}`);
-            }
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+    }, [auth.user?.profile?.email]);
 
     // Fetch events on page load and whenever user is authenticated
     useEffect(() => {
         if (auth.isAuthenticated) {
             fetchEvents(); // Fetch events when the component is mounted
         }
-    }, [auth.isAuthenticated, fetchEvents]); // Dependency on auth.isAuthenticated and fetchEvents
+    }, [auth.isAuthenticated, fetchEvents]);
 
     return (
         <div>
@@ -71,7 +59,6 @@ export default function MyEvents() {
                         <li key={event.eventId}>
                             <p><strong>Name:</strong> {event.eventName}</p>
                             <p><strong>Date:</strong> {event.event_date}</p>
-                            <button onClick={() => deleteEvent(event.eventId)}>Delete</button>
                         </li>
                     ))}
                 </ul>

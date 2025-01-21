@@ -17,18 +17,28 @@ export default function Profile() {
 
     // Fetch user profile when the user is authenticated
     useEffect(() => {
-        if (auth.isAuthenticated) {
+        if (auth.isAuthenticated && auth.user?.profile?.email) {
             const fetchUserData = async () => {
                 try {
-                    const response = await fetch(
-                        `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?email=${auth.user?.profile?.email}`
-                    );
+                    const email = auth.user?.profile?.email;
+
+                    if (!email) {
+                        setError("Email is missing.");
+                        return;
+                    }
+
+                    const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?email=${email}`;
+                    console.log("Fetching profile from API:", apiUrl); // Debugging log
+
+                    const response = await fetch(apiUrl);
 
                     if (!response.ok) {
                         throw new Error("Failed to fetch user data");
                     }
 
                     const result = await response.json();
+                    console.log("API Profile Response:", result); // Debugging log
+
                     if (result?.data) {
                         setUserData(result.data);
                         setFormData({
@@ -40,16 +50,17 @@ export default function Profile() {
                             dob: result.data.dob || "Not set",
                         });
                     } else {
-                        setError("No user data found");
+                        setError("No user data found.");
                     }
                 } catch (err) {
+                    console.error("Error fetching user data:", err); // Debugging log
                     setError(err.message);
                 }
             };
 
             fetchUserData();
         }
-    }, [auth.isAuthenticated, auth.user?.profile?.email]); // Include `auth.user?.profile?.email` in the dependency array
+    }, [auth.isAuthenticated, auth.user?.profile?.email]); // Add auth.user?.profile?.email to the dependency array
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -84,10 +95,6 @@ export default function Profile() {
             setError("User is not authenticated");
         }
     };
-
-    if (!auth.isAuthenticated) {
-        return <div>Please log in to view your profile.</div>;
-    }
 
     return (
         <div>
