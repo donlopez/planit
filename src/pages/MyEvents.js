@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 
 export default function MyEvents() {
     const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/events";
+        const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function/events";
 
         fetch(apiUrl)
             .then((response) => {
@@ -17,34 +16,46 @@ export default function MyEvents() {
             })
             .then((data) => {
                 setEvents(data.events);
-                setLoading(false);
             })
             .catch((err) => {
                 setError(err.message);
-                setLoading(false);
             });
     }, []);
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+    if (error) return <p>Error: {error}</p>;
 
     return (
         <div>
             <h1>My Events</h1>
             {events.length > 0 ? (
-                <ul>
-                    {events.map((event) => (
-                        <li key={event.id}>
-                            <h3>{event.name}</h3>
-                            <p><strong>Date:</strong> {event.event_date}</p>
-                            <p><strong>Location:</strong> {event.venue_name || "Not specified"}</p>
-                            <p><strong>Description:</strong> {event.details}</p>
-                            <p><strong>Start Time:</strong> {event.start_time}</p>
-                            <p><strong>End Time:</strong> {event.end_time}</p>
-                            <p><strong>Guest Count:</strong> {event.guest_count}</p>
-                        </li>
-                    ))}
-                </ul>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Guest Count</th>
+                            <th>Details</th>
+                            <th>Venue Name</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {events.map((event) => (
+                            <tr key={event.id}>
+                                <td>{event.name}</td>
+                                <td>{event.event_date}</td>
+                                <td>{event.start_time}</td>
+                                <td>{event.end_time}</td>
+                                <td>{event.guest_count}</td>
+                                <td>{event.details}</td>
+                                <td>{event.venue_name}</td>
+                                <td>{event.address}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             ) : (
                 <p>No events found.</p>
             )}

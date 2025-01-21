@@ -2,26 +2,26 @@ import { useState } from "react";
 
 export default function Planit() {
     const [formData, setFormData] = useState({
-        eventName: "",
-        eventDate: "",
-        location: "",
-        description: "",
-        startTime: "",
-        endTime: "",
-        guestCount: "",
-        maxCapacity: "",
+        name: "",
+        event_date: "",
+        start_time: "",
+        end_time: "",
+        guest_count: "",
+        details: "",
+        venue_name: "",
+        address: "",
+        max_capacity: "",
     });
+
     const [message, setMessage] = useState("");
 
-    const handleChange = (e) => {
+    const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
+        setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/events";
-
+    const handleEventCreation = () => {
+        const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function/events";
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -33,75 +33,56 @@ export default function Planit() {
                 }
                 return response.json();
             })
-            .then(() => {
+            .then((data) => {
                 setMessage("Event created successfully!");
                 setFormData({
-                    eventName: "",
-                    eventDate: "",
-                    location: "",
-                    description: "",
-                    startTime: "",
-                    endTime: "",
-                    guestCount: "",
-                    maxCapacity: "",
+                    name: "",
+                    event_date: "",
+                    start_time: "",
+                    end_time: "",
+                    guest_count: "",
+                    details: "",
+                    venue_name: "",
+                    address: "",
+                    max_capacity: "",
                 });
             })
             .catch((err) => {
-                setMessage(`Error: ${err.message}`);
+                setMessage(err.message);
             });
     };
 
     return (
         <div>
-            <h1>Create Event</h1>
-            <form onSubmit={handleSubmit}>
+            <h1>Plan Your Event</h1>
+            <form>
                 <label>
                     Event Name:
                     <input
                         type="text"
-                        name="eventName"
-                        value={formData.eventName}
-                        onChange={handleChange}
-                        required
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
                     />
                 </label>
                 <br />
                 <label>
-                    Date:
+                    Event Date:
                     <input
                         type="date"
-                        name="eventDate"
-                        value={formData.eventDate}
-                        onChange={handleChange}
+                        name="event_date"
+                        value={formData.event_date}
+                        onChange={handleInputChange}
                     />
-                </label>
-                <br />
-                <label>
-                    Location:
-                    <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleChange}
-                    />
-                </label>
-                <br />
-                <label>
-                    Description:
-                    <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                    ></textarea>
                 </label>
                 <br />
                 <label>
                     Start Time:
                     <input
                         type="time"
-                        name="startTime"
-                        value={formData.startTime}
-                        onChange={handleChange}
+                        name="start_time"
+                        value={formData.start_time}
+                        onChange={handleInputChange}
                     />
                 </label>
                 <br />
@@ -109,9 +90,9 @@ export default function Planit() {
                     End Time:
                     <input
                         type="time"
-                        name="endTime"
-                        value={formData.endTime}
-                        onChange={handleChange}
+                        name="end_time"
+                        value={formData.end_time}
+                        onChange={handleInputChange}
                     />
                 </label>
                 <br />
@@ -119,9 +100,38 @@ export default function Planit() {
                     Guest Count:
                     <input
                         type="number"
-                        name="guestCount"
-                        value={formData.guestCount}
-                        onChange={handleChange}
+                        name="guest_count"
+                        value={formData.guest_count}
+                        onChange={handleInputChange}
+                    />
+                </label>
+                <br />
+                <label>
+                    Details:
+                    <textarea
+                        name="details"
+                        value={formData.details}
+                        onChange={handleInputChange}
+                    />
+                </label>
+                <br />
+                <label>
+                    Venue Name:
+                    <input
+                        type="text"
+                        name="venue_name"
+                        value={formData.venue_name}
+                        onChange={handleInputChange}
+                    />
+                </label>
+                <br />
+                <label>
+                    Address:
+                    <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
                     />
                 </label>
                 <br />
@@ -129,13 +139,15 @@ export default function Planit() {
                     Max Capacity:
                     <input
                         type="number"
-                        name="maxCapacity"
-                        value={formData.maxCapacity}
-                        onChange={handleChange}
+                        name="max_capacity"
+                        value={formData.max_capacity}
+                        onChange={handleInputChange}
                     />
                 </label>
                 <br />
-                <button type="submit">Create Event</button>
+                <button type="button" onClick={handleEventCreation}>
+                    Create Event
+                </button>
             </form>
             {message && <p>{message}</p>}
         </div>
