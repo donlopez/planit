@@ -1,96 +1,103 @@
-import { useAuth } from "react-oidc-context";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "react-oidc-context"; // To get authenticated user ID
 
 export default function Profile() {
     const auth = useAuth();
     const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isEditable, setIsEditable] = useState(false);
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
         phone: "",
         username: "",
+        email: "",
+        dob: "",
     });
+    const [error, setError] = useState(null);
+    const [isEditable, setIsEditable] = useState(false);
 
+    // Fetch user profile when the user is authenticated
     useEffect(() => {
         if (auth.isAuthenticated) {
-            const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
-            const userEmail = auth.user?.profile?.email;
+            const fetchUserData = async () => {
+                try {
+                    const response = await fetch(
+                        `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?email=${auth.user?.profile?.email}`
+                    );
 
-            fetch(`${apiUrl}?email=${userEmail}`)
-                .then((response) => {
-                    if (response.status === 404) {
-                        setError("User not found");
-                        setLoading(false);
-                    } else if (!response.ok) {
-                        throw new Error(`Failed to fetch user data: ${response.status}`);
-                    } else {
-                        return response.json();
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch user data");
                     }
-                })
-                .then((data) => {
-                    if (data) {
-                        setUserData(data.data);
+
+                    const result = await response.json();
+                    if (result?.data) {
+                        setUserData(result.data);
                         setFormData({
-                            first_name: data.data.first_name,
-                            last_name: data.data.last_name,
-                            phone: data.data.phone,
-                            username: data.data.username,
+                            first_name: result.data.first_name,
+                            last_name: result.data.last_name,
+                            phone: result.data.phone,
+                            username: result.data.username,
+                            email: result.data.email,
+                            dob: result.data.dob || "Not set",
                         });
+                    } else {
+                        setError("No user data found");
                     }
-                    setLoading(false);
-                })
-                .catch((err) => {
+                } catch (err) {
                     setError(err.message);
-                    setLoading(false);
-                });
-        } else {
-            setLoading(false);
-        }
-    }, [auth.isAuthenticated, auth.user]);
+                }
+            };
 
+            fetchUserData();
+        }
+    }, [auth.isAuthenticated, auth.user?.profile?.email]); // Include `auth.user?.profile?.email` in the dependency array
+
+    // Handle form input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleProfileUpdate = () => {
-        const apiUrl = " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
-        const userEmail = auth.user?.profile?.email;
+    // Handle profile update
+    const handleProfileUpdate = async () => {
+        if (auth.isAuthenticated) {
+            try {
+                const response = await fetch(
+                    `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?email=${auth.user?.profile?.email}`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formData),
+                    }
+                );
 
-        fetch(`${apiUrl}?email=${userEmail}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`Failed to update profile: ${response.status}`);
+                if (response.ok) {
+                    setIsEditable(false); // Disable edit mode
+                    setError(null);
+                    alert("Profile updated successfully!");
+                } else {
+                    throw new Error("Failed to update profile");
                 }
-                return response.json();
-            })
-            .then(() => {
-                setIsEditable(false);
-                setUserData({ ...userData, ...formData });
-                setError(null);
-            })
-            .catch((err) => {
+            } catch (err) {
                 setError(err.message);
-            });
+            }
+        } else {
+            setError("User is not authenticated");
+        }
     };
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+    if (!auth.isAuthenticated) {
+        return <div>Please log in to view your profile.</div>;
+    }
 
     return (
         <div>
             <h1>Profile</h1>
-            {userData && (
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {userData ? (
                 <div>
                     <p><strong>Email:</strong> {userData.email}</p>
-                    <p><strong>Date of Birth:</strong> {userData.dob ? new Date(userData.dob).toLocaleDateString() : "Not set"}</p>
+                    <p><strong>Date of Birth:</strong> {formData.dob}</p>
+
                     <label>
                         First Name:
                         <input
@@ -141,6 +148,8 @@ export default function Profile() {
                         <button onClick={handleProfileUpdate}>Save Changes</button>
                     )}
                 </div>
+            ) : (
+                <div>Loading profile...</div>
             )}
         </div>
     );
