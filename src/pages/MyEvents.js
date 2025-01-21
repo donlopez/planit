@@ -6,65 +6,67 @@ export default function MyEvents() {
     const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
 
-    // Memoize the fetchEvents function to avoid unnecessary re-creations
+    // Fetch events function using useCallback to avoid changing the reference on each render
     const fetchEvents = useCallback(async () => {
         try {
-            const email = auth.user?.profile?.email;
-
-            // Check if email is available
-            if (!email) {
-                setError("User is not authenticated or email is missing.");
-                return;
-            }
-
-            // Construct the API URL
-            const apiUrl = `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${email}`;
-            console.log("Fetching events from API:", apiUrl); // Debugging log
-
-            const response = await fetch(apiUrl); // Fetch events
+            const response = await fetch(
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${auth.user?.profile?.sub}`
+            );
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.status}`);
             }
 
             const result = await response.json();
-            console.log("API Response:", result); // Debugging log
-
             if (result?.data) {
                 setEvents(result.data);
-            } else {
-                setError("No events available.");
             }
             setError(null);
         } catch (err) {
-            console.error("Error fetching events:", err); // Debugging log
             setError(err.message);
         }
-    }, [auth.user?.profile?.email]);
+    }, [auth.user?.profile?.sub]); // Memoize the function so it doesn't change on every render
 
     // Fetch events on page load and whenever user is authenticated
     useEffect(() => {
         if (auth.isAuthenticated) {
             fetchEvents(); // Fetch events when the component is mounted
         }
-    }, [auth.isAuthenticated, fetchEvents]);
+    }, [auth.isAuthenticated, fetchEvents]); // Now no need to add fetchEvents directly
+
+    const deleteEvent = async (eventId) => {
+        try {
+            const response = await fetch(
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`,
+                { method: "DELETE" }
+            );
+            if (response.ok) {
+                setEvents(events.filter(event => event.eventId !== eventId)); // Remove from state
+            } else {
+                throw new Error(`Failed to delete event: ${response.status}`);
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
 
     return (
         <div>
             <h1>My Events</h1>
-            {error && <p style={{ color: "red" }}>{error}</p>}
             {events.length > 0 ? (
                 <ul>
                     {events.map((event) => (
                         <li key={event.eventId}>
                             <p><strong>Name:</strong> {event.eventName}</p>
                             <p><strong>Date:</strong> {event.event_date}</p>
+                            <button onClick={() => deleteEvent(event.eventId)}>Delete</button>
                         </li>
                     ))}
                 </ul>
             ) : (
                 <p>No events available.</p>
             )}
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );
 }
