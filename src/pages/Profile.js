@@ -18,6 +18,7 @@ export default function Profile() {
         if (auth.isAuthenticated) {
             const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
+            const cognitoUsername = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
 
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
@@ -32,6 +33,28 @@ export default function Profile() {
                 })
                 .then((data) => {
                     if (data) {
+                        const dbUsername = data.data.username;
+
+                        // Check if the Cognito username differs from the database username
+                        if (cognitoUsername !== dbUsername) {
+                            // Update the database username to match Cognito
+                            fetch(`${apiUrl}?email=${userEmail}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    username: cognitoUsername,
+                                }),
+                            })
+                                .then((response) => {
+                                    if (!response.ok) {
+                                        console.error("Failed to update username in database.");
+                                    } else {
+                                        console.log("Username updated in database to match Cognito.");
+                                    }
+                                })
+                                .catch((err) => console.error("Error updating username:", err));
+                        }
+
                         setUserData(data.data);
                     }
                     setLoading(false);
@@ -59,7 +82,7 @@ export default function Profile() {
         const payload = {
             ...formData,
             email: userEmail,
-            username, // Use derived or fetched username
+            username,
         };
 
         if (!payload.first_name || !payload.last_name || !payload.phone || !payload.dob || !payload.username) {
@@ -78,7 +101,7 @@ export default function Profile() {
                 }
                 return response.json();
             })
-            .then((data) => {
+            .then(() => {
                 setIsNewUser(false);
                 setUserData({ ...formData, email: userEmail, username });
                 setError(null);
@@ -91,6 +114,8 @@ export default function Profile() {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+
+    const cognitoUsername = auth.user?.profile?.preferred_username || auth.user?.profile?.email.split("@")[0];
 
     return (
         <div>
@@ -148,7 +173,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || auth.user?.profile?.preferred_username || userData.email.split("@")[0]}</p>
+                        <p><strong>Username:</strong> {userData.username || cognitoUsername}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
