@@ -1,37 +1,43 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "react-oidc-context"; // To get authenticated user ID
 
 export default function MyEvents() {
+    const auth = useAuth();
     const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const response = await fetch(
-                    " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=27"
-                );
+    // Fetch events function using useCallback to avoid changing the reference on each render
+    const fetchEvents = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${auth.user?.profile?.sub}`
+            );
 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch events: ${response.status}`);
-                }
-
-                const result = await response.json();
-                if (result?.data) {
-                    setEvents(result.data);
-                }
-                setError(null);
-            } catch (err) {
-                setError(err.message);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch events: ${response.status}`);
             }
-        };
 
-        fetchEvents();
-    }, []);
+            const result = await response.json();
+            if (result?.data) {
+                setEvents(result.data);
+            }
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        }
+    }, [auth.user?.profile?.sub]); // Memoize the function so it doesn't change on every render
+
+    // Fetch events on page load and whenever user is authenticated
+    useEffect(() => {
+        if (auth.isAuthenticated) {
+            fetchEvents(); // Fetch events when the component is mounted
+        }
+    }, [auth.isAuthenticated, fetchEvents]); // Now no need to add fetchEvents directly
 
     const deleteEvent = async (eventId) => {
         try {
             const response = await fetch(
-                ` https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`,
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`,
                 { method: "DELETE" }
             );
             if (response.ok) {
@@ -44,8 +50,6 @@ export default function MyEvents() {
         }
     };
 
-    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
-
     return (
         <div>
             <h1>My Events</h1>
@@ -53,15 +57,8 @@ export default function MyEvents() {
                 <ul>
                     {events.map((event) => (
                         <li key={event.eventId}>
-                            <p>
-                                <strong>Name:</strong> {event.eventName}
-                            </p>
-                            <p>
-                                <strong>Date:</strong>{" "}
-                                {event.event_date
-                                    ? new Date(event.event_date).toLocaleDateString()
-                                    : "Not set"}
-                            </p>
+                            <p><strong>Name:</strong> {event.eventName}</p>
+                            <p><strong>Date:</strong> {event.event_date}</p>
                             <button onClick={() => deleteEvent(event.eventId)}>Delete</button>
                         </li>
                     ))}
@@ -69,6 +66,7 @@ export default function MyEvents() {
             ) : (
                 <p>No events available.</p>
             )}
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );
 }
