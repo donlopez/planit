@@ -15,7 +15,6 @@ export default function Profile() {
     });
 
     useEffect(() => {
-        // Fetch profile only if the user is authenticated
         if (auth.isAuthenticated) {
             const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
@@ -23,7 +22,6 @@ export default function Profile() {
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
                     if (response.status === 404) {
-                        // If user not found, treat as a new user
                         setIsNewUser(true);
                         setLoading(false);
                     } else if (!response.ok) {
@@ -39,6 +37,7 @@ export default function Profile() {
                     setLoading(false);
                 })
                 .catch((err) => {
+                    console.error("Error fetching user data:", err.message);
                     setError(err.message);
                     setLoading(false);
                 });
@@ -55,12 +54,18 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
+        const username = auth.user?.profile?.preferred_username || "default_username";
 
-        const payload = { ...formData, email: userEmail };
-        console.log("Payload being sent:", payload); // Debugging the payload
+        const payload = {
+            ...formData,
+            email: userEmail,
+            username, // Add username from Cognito
+        };
 
-        // Ensure all required fields are filled
-        if (!payload.first_name || !payload.last_name || !payload.email || !payload.phone || !payload.dob) {
+        console.log("Payload sent to backend:", payload);
+
+        // Validate all required fields
+        if (!payload.first_name || !payload.last_name || !payload.phone || !payload.dob || !payload.username) {
             setError("All fields are required. Please fill in all fields.");
             return;
         }
@@ -78,8 +83,8 @@ export default function Profile() {
             })
             .then((data) => {
                 setIsNewUser(false);
-                setUserData(data);
-                setError(null); // Clear errors
+                setUserData({ ...formData, email: userEmail, username });
+                setError(null);
             })
             .catch((err) => {
                 console.error("Error creating profile:", err.message);
@@ -146,6 +151,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
+                        <p><strong>Username:</strong> {userData.username || "Not set"}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
