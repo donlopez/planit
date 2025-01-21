@@ -16,14 +16,19 @@ export default function Profile() {
 
     useEffect(() => {
         if (auth.isAuthenticated) {
+            console.log("User authenticated, fetching profile...");
             const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
             const userEmail = auth.user?.profile?.email;
             const cognitoUsername = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
 
+            console.log("Cognito Username:", cognitoUsername);
+
             fetch(`${apiUrl}?email=${userEmail}`)
                 .then((response) => {
                     if (response.status === 404) {
+                        console.log("User not found in database. Marking as new user.");
                         setIsNewUser(true);
+                        setFormData((prev) => ({ ...prev, username: cognitoUsername }));
                         setLoading(false);
                     } else if (!response.ok) {
                         throw new Error(`Failed to fetch user data: ${response.status}`);
@@ -33,29 +38,27 @@ export default function Profile() {
                 })
                 .then((data) => {
                     if (data) {
-                        const dbUsername = data.data.username;
+                        console.log("Fetched User Data:", data.data);
 
-                        // Check if the Cognito username differs from the database username
-                        if (cognitoUsername !== dbUsername) {
-                            // Update the database username to match Cognito
+                        const dbUsername = data.data.username;
+                        if (!dbUsername || dbUsername !== cognitoUsername) {
+                            console.log("Updating username in database...");
                             fetch(`${apiUrl}?email=${userEmail}`, {
                                 method: "PUT",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    username: cognitoUsername,
-                                }),
+                                body: JSON.stringify({ username: cognitoUsername }),
                             })
-                                .then((response) => {
-                                    if (!response.ok) {
-                                        console.error("Failed to update username in database.");
+                                .then((updateResponse) => {
+                                    if (!updateResponse.ok) {
+                                        console.error("Failed to update username in the database.");
                                     } else {
-                                        console.log("Username updated in database to match Cognito.");
+                                        setUserData({ ...data.data, username: cognitoUsername });
                                     }
                                 })
                                 .catch((err) => console.error("Error updating username:", err));
+                        } else {
+                            setUserData(data.data);
                         }
-
-                        setUserData(data.data);
                     }
                     setLoading(false);
                 })
@@ -65,6 +68,7 @@ export default function Profile() {
                     setLoading(false);
                 });
         } else {
+            console.log("User not authenticated.");
             setLoading(false);
         }
     }, [auth.isAuthenticated, auth.user]);
@@ -77,23 +81,13 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
-        const username = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
 
-        const payload = {
-            ...formData,
-            email: userEmail,
-            username,
-        };
-
-        if (!payload.first_name || !payload.last_name || !payload.phone || !payload.dob || !payload.username) {
-            setError("All fields are required. Please fill in all fields.");
-            return;
-        }
+        console.log("Creating profile for:", { ...formData, email: userEmail });
 
         fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ ...formData, email: userEmail }),
         })
             .then((response) => {
                 if (!response.ok) {
@@ -103,7 +97,7 @@ export default function Profile() {
             })
             .then(() => {
                 setIsNewUser(false);
-                setUserData({ ...formData, email: userEmail, username });
+                setUserData({ ...formData, email: userEmail });
                 setError(null);
             })
             .catch((err) => {
@@ -114,8 +108,6 @@ export default function Profile() {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
-
-    const cognitoUsername = auth.user?.profile?.preferred_username || auth.user?.profile?.email.split("@")[0];
 
     return (
         <div>
@@ -173,7 +165,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || cognitoUsername}</p>
+                        <p><strong>Username:</strong> {userData.username || "Not set"}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
