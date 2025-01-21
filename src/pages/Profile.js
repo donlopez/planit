@@ -35,27 +35,25 @@ export default function Profile() {
                     if (data) {
                         const dbUsername = data.data.username;
 
-                        // Check if the Cognito username differs from the database username
-                        if (cognitoUsername !== dbUsername) {
-                            // Update the database username to match Cognito
+                        // Update username in database if different
+                        if (!dbUsername || dbUsername !== cognitoUsername) {
                             fetch(`${apiUrl}?email=${userEmail}`, {
                                 method: "PUT",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    username: cognitoUsername,
-                                }),
+                                body: JSON.stringify({ username: cognitoUsername }),
                             })
                                 .then((response) => {
                                     if (!response.ok) {
                                         console.error("Failed to update username in database.");
                                     } else {
                                         console.log("Username updated in database to match Cognito.");
+                                        setUserData({ ...data.data, username: cognitoUsername });
                                     }
                                 })
                                 .catch((err) => console.error("Error updating username:", err));
+                        } else {
+                            setUserData(data.data);
                         }
-
-                        setUserData(data.data);
                     }
                     setLoading(false);
                 })
@@ -115,8 +113,6 @@ export default function Profile() {
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
-    const cognitoUsername = auth.user?.profile?.preferred_username || auth.user?.profile?.email.split("@")[0];
-
     return (
         <div>
             <h1>Profile</h1>
@@ -173,7 +169,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || cognitoUsername}</p>
+                        <p><strong>Username:</strong> {userData.username}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
