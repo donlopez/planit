@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useAuth } from "react-oidc-context";
 
 export default function Planit() {
+    const auth = useAuth();
     const [formData, setFormData] = useState({
         name: "",
         event_date: "",
@@ -11,7 +13,7 @@ export default function Planit() {
         venue_name: "",
         address: "",
         max_capacity: "",
-        created_by: 27, // Replace with dynamic user ID if needed
+        created_by: "", // Initially empty, will be set dynamically
     });
 
     const [error, setError] = useState(null);
@@ -33,39 +35,46 @@ export default function Planit() {
             return;
         }
 
-        try {
-            // Send a POST request to Lambda to create an event
-            const response = await fetch(
-                " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function", // Replace with your Lambda function URL
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
-                }
-            );
+        if (auth.isAuthenticated) {
+            // Set the created_by field to the authenticated user's ID
+            formData.created_by = auth.user?.profile?.sub || auth.user?.profile?.email;
 
-            // Check if the response was successful
-            if (response.ok) {
-                setSuccess("Event created successfully!");
-                setError(null); // Clear any error messages
-                setFormData({
-                    name: "",
-                    event_date: "",
-                    start_time: "",
-                    end_time: "",
-                    guest_count: "",
-                    details: "",
-                    venue_name: "",
-                    address: "",
-                    max_capacity: "",
-                    created_by: 27, // Reset created_by field
-                });
-            } else {
-                throw new Error(`Failed to create event: ${response.status}`);
+            try {
+                // Send a POST request to Lambda to create an event
+                const response = await fetch(
+                    "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function", // Correct API URL
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formData),
+                    }
+                );
+
+                // Check if the response was successful
+                if (response.ok) {
+                    setSuccess("Event created successfully!");
+                    setError(null); // Clear any error messages
+                    setFormData({
+                        name: "",
+                        event_date: "",
+                        start_time: "",
+                        end_time: "",
+                        guest_count: "",
+                        details: "",
+                        venue_name: "",
+                        address: "",
+                        max_capacity: "",
+                        created_by: "", // Reset the created_by field
+                    });
+                } else {
+                    throw new Error(`Failed to create event: ${response.status}`);
+                }
+            } catch (err) {
+                setError(err.message);
+                setSuccess(null); // Clear success message if an error occurs
             }
-        } catch (err) {
-            setError(err.message);
-            setSuccess(null); // Clear success message if an error occurs
+        } else {
+            setError("User is not authenticated.");
         }
     };
 
