@@ -8,7 +8,7 @@ export default function MyEvents() {
         const fetchEvents = async () => {
             try {
                 const response = await fetch(
-                    "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=27"
+                    " https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=27"
                 );
 
                 if (!response.ok) {
@@ -28,6 +28,22 @@ export default function MyEvents() {
         fetchEvents();
     }, []);
 
+    const deleteEvent = async (eventId) => {
+        try {
+            const response = await fetch(
+                ` https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`,
+                { method: "DELETE" }
+            );
+            if (response.ok) {
+                setEvents(events.filter(event => event.eventId !== eventId)); // Remove from state
+            } else {
+                throw new Error(`Failed to delete event: ${response.status}`);
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
     return (
@@ -46,25 +62,7 @@ export default function MyEvents() {
                                     ? new Date(event.event_date).toLocaleDateString()
                                     : "Not set"}
                             </p>
-                            <p>
-                                <strong>Start Time:</strong> {event.start_time || "Not set"}
-                            </p>
-                            <p>
-                                <strong>End Time:</strong> {event.end_time || "Not set"}
-                            </p>
-                            <p>
-                                <strong>Details:</strong> {event.details || "Not set"}
-                            </p>
-                            <p>
-                                <strong>Venue:</strong> {event.venueName || "Not set"}
-                            </p>
-                            <p>
-                                <strong>Address:</strong> {event.venueAddress || "Not set"}
-                            </p>
-                            <p>
-                                <strong>Max Capacity:</strong>{" "}
-                                {event.max_capacity || "Not set"}
-                            </p>
+                            <button onClick={() => deleteEvent(event.eventId)}>Delete</button>
                         </li>
                     ))}
                 </ul>
