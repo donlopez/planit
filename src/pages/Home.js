@@ -10,7 +10,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Welcome to Event Planner!</h1>
+      <h1>Welcome to Eventro!</h1>
       <p>
         Event Planner is your one-stop solution to manage, plan, and track all
         your events. Log in to get started!

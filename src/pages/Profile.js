@@ -54,17 +54,14 @@ export default function Profile() {
     const handleProfileCreation = () => {
         const apiUrl = "https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function";
         const userEmail = auth.user?.profile?.email;
-        const username = auth.user?.profile?.preferred_username || "default_username";
+        const username = auth.user?.profile?.preferred_username || userEmail.split("@")[0];
 
         const payload = {
             ...formData,
             email: userEmail,
-            username, // Add username from Cognito
+            username, // Use derived or fetched username
         };
 
-        console.log("Payload sent to backend:", payload);
-
-        // Validate all required fields
         if (!payload.first_name || !payload.last_name || !payload.phone || !payload.dob || !payload.username) {
             setError("All fields are required. Please fill in all fields.");
             return;
@@ -151,7 +148,7 @@ export default function Profile() {
                 userData && (
                     <div>
                         <p><strong>Email:</strong> {userData.email}</p>
-                        <p><strong>Username:</strong> {userData.username || "Not set"}</p>
+                        <p><strong>Username:</strong> {userData.username || auth.user?.profile?.preferred_username || userData.email.split("@")[0]}</p>
                         <p><strong>First Name:</strong> {userData.first_name}</p>
                         <p><strong>Last Name:</strong> {userData.last_name}</p>
                         <p><strong>Phone:</strong> {userData.phone}</p>
