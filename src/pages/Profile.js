@@ -1,6 +1,6 @@
 import { useAuth } from "react-oidc-context";
 import { useEffect, useState } from "react";
-import "./styles.css";
+import '../styles.css';
 
 export default function Profile() {
     const auth = useAuth();

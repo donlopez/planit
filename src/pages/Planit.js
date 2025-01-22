@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "react-oidc-context";
-import "./styles.css";
+import '../styles.css';
 
 export default function Planit() {
     const auth = useAuth();
