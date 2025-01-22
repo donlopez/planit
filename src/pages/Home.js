@@ -1,4 +1,5 @@
 import { useAuth } from "react-oidc-context";
+import "./styles.css";
 
 export default function Home() {
   const auth = useAuth();
