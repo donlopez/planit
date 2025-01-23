@@ -22,3 +22,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .ipynb  
+
+# Ignore Python packages
+ipykernel_env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.eggs/
+.venv/
+venv/
+env/
+.env/

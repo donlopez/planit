@@ -56,14 +56,12 @@ export default function Planit() {
         }
     }, [auth.user?.profile?.email]); // Add email to the dependency array
 
-    // Fetch events when the component loads or when authentication state changes
     useEffect(() => {
         if (auth.isAuthenticated) {
             fetchEvents(); // Fetch events when the component is mounted
         }
     }, [auth.isAuthenticated, fetchEvents]); // Add fetchEvents as a dependency
 
-    // Handle form submission
     const handleFormSubmit = async (e) => {
         e.preventDefault();
 
