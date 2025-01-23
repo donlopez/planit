@@ -13,6 +13,9 @@ export default function EditEvent() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        // Log the eventId to ensure it's correct
+        console.log("Fetching event with ID:", eventId);
+
         const response = await fetch(
           `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`
         );
@@ -22,9 +25,13 @@ export default function EditEvent() {
         }
 
         const result = await response.json();
+        console.log("Event data received:", result); // Log the response data
+
         if (result?.data) {
           setEventData(result.data);
           setFormData(result.data);
+        } else {
+          setError("Event not found.");
         }
       } catch (err) {
         setError(err.message);
