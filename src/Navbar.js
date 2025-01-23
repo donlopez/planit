@@ -21,8 +21,8 @@ export default function Navbar({ auth }) {
       </Link>
       <ul>
         <CustomLink to="/planit">Planit</CustomLink>
-        <CustomLink to="/profile">Profile</CustomLink>
         <CustomLink to="/dashboard">Dashboard</CustomLink> {/* Added Dashboard link */}
+        <CustomLink to="/profile">Profile</CustomLink>
         {auth.isAuthenticated ? (
           <li>
             <Link to="#" onClick={signOutRedirect} className="nav-link">Sign out</Link>
