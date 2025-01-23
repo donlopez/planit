@@ -30,14 +30,14 @@ export default function Planit() {
     // Memoize the fetchEvents function to avoid unnecessary re-creations
     const fetchEvents = useCallback(async () => {
         try {
-            const email = auth.user?.profile?.email; // Get the user's email from auth
-            if (!email) {
-                setError("User is not authenticated or email is missing.");
+            const userId = auth.user?.profile?.sub; // Get the user's ID from auth (sub is unique)
+            if (!userId) {
+                setError("User is not authenticated or user ID is missing.");
                 return;
             }
 
             const response = await fetch(
-                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${email}`
+                `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?created_by=${userId}`
             );
 
             if (!response.ok) {
@@ -54,7 +54,7 @@ export default function Planit() {
         } catch (err) {
             setError(err.message);
         }
-    }, [auth.user?.profile?.email]); // Add email to the dependency array
+    }, [auth.user?.profile?.sub]); // Use the user's unique ID (sub)
 
     useEffect(() => {
         if (auth.isAuthenticated) {
@@ -72,8 +72,8 @@ export default function Planit() {
         }
 
         if (auth.isAuthenticated) {
-            // Dynamically set created_by to the authenticated user's ID (Cognito's sub or email)
-            formData.created_by = auth.user?.profile?.sub || auth.user?.profile?.email;
+            // Dynamically set created_by to the authenticated user's unique ID (Cognito's sub)
+            formData.created_by = auth.user?.profile?.sub; // Use user's unique ID (sub)
         } else {
             setError("User is not authenticated.");
             return;
@@ -242,6 +242,9 @@ export default function Planit() {
                             </p>
                             <p>
                                 <strong>Details:</strong> {event.details}
+                            </p>
+                            <p>
+                                <strong>Venue:</strong> {event.venueName} - {event.venueAddress}
                             </p>
                         </li>
                     ))}
