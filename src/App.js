@@ -1,42 +1,34 @@
-import { useAuth } from "react-oidc-context"; 
-import Navbar from "./Navbar"; // Navigation bar component
-import Home from "./pages/Home"; // Home page for guests
-import Planit from "./pages/Planit"; // Page to create events
-import Profile from "./pages/Profile"; // User profile page
-import { Route, Routes, Navigate } from "react-router-dom"; // For routing
+import { useAuth } from "react-oidc-context";
+import Navbar from "./Navbar";
+import Home from "./pages/Home";
+import Planit from "./pages/Planit";
+import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard"; // Add Dashboard import
+import EditEvent from "./pages/EditEvent"; // Add EditEvent import
+import { Route, Routes, Navigate } from "react-router-dom";
 
 function App() {
-  const auth = useAuth(); // Authentication hook
+  const auth = useAuth();
 
-  // Handle loading state
   if (auth.isLoading) {
     return <div>Loading...</div>;
   }
 
-  // Handle error state
   if (auth.error) {
     return <div>Error: {auth.error.message}</div>;
   }
 
   return (
     <>
-      {/* Navigation bar */}
       <Navbar auth={auth} />
       <div className="container">
         <Routes>
-          {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-
-          {/* Protected routes (requires authentication) */}
-          <Route
-            path="/planit"
-            element={auth.isAuthenticated ? <Planit /> : <Navigate to="/" />}
-          />
-          <Route
-            path="/profile"
-            element={auth.isAuthenticated ? <Profile /> : <Navigate to="/" />}
-          />
+          <Route path="/planit" element={auth.isAuthenticated ? <Planit /> : <Navigate to="/" />} />
+          <Route path="/profile" element={auth.isAuthenticated ? <Profile /> : <Navigate to="/" />} />
+          <Route path="/dashboard" element={auth.isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
+          <Route path="/edit-event/:eventId" element={auth.isAuthenticated ? <EditEvent /> : <Navigate to="/" />} />
         </Routes>
       </div>
     </>
