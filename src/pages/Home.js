@@ -7,55 +7,53 @@ export default function Home() {
 
   if (auth.isAuthenticated) {
     const userName = auth.user?.profile?.email || "User";
-    return <h1>Welcome, {userName}!</h1>;
+    return (
+      <div className="home-container">
+        <header className="hero-header" style={{ backgroundImage: `url(${planitHeaderImage})` }}>
+          <div className="hero-content">
+            <h1>Welcome, {userName}!</h1>
+            <p>
+              You're all set! With <strong>Eventro</strong>, planning, managing, and tracking events has never been easier.
+              Let us help you bring your next big event to life.
+            </p>
+          </div>
+        </header>
+
+        <section className="app-description">
+          <h2>Maximize Your Event Planning with Eventro</h2>
+          <p>
+            Whether it's a small gathering or a large corporate event, <strong>Eventro</strong> allows you to easily manage every aspect of your event, from guest lists to event activities.
+            Our intuitive platform will keep everything organized, so you can focus on what matters most — creating unforgettable experiences.
+          </p>
+          <p>
+            <strong>What You Can Do With Eventro:</strong>
+          </p>
+          <ul>
+            <li><strong>Organize with Ease:</strong> Set up events quickly, from specifying dates and times to managing guest lists and event details.</li>
+            <li><strong>Track RSVPs in Real-Time:</strong> Stay on top of who’s attending and receive instant updates on responses.</li>
+            <li><strong>Assign Locations Seamlessly:</strong> Choose the best venues and assign them to your events with just a few clicks.</li>
+            <li><strong>Coordinate Every Detail:</strong> From catering to entertainment, ensure every part of your event is perfectly coordinated.</li>
+          </ul>
+          <p>
+            <strong>Eventro</strong> makes it easy for you to handle all the logistics, so you can focus on delivering a great experience for your guests.
+          </p>
+          <p>
+            Ready to elevate your events? Start exploring your dashboard and manage your events like a pro!
+          </p>
+        </section>
+
+        <section className="features">
+          <h2>Features at a Glance</h2>
+          <ul>
+            <li><strong>Create, Edit, and Manage Events:</strong> Easily organize and modify event details.</li>
+            <li><strong>Track Guest Lists:</strong> Monitor RSVP statuses and manage your guest list effortlessly.</li>
+            <li><strong>Assign Event Locations:</strong> Pick and assign locations for your events with ease.</li>
+            <li><strong>Organize Event Activities:</strong> Plan and manage the schedule of your event’s activities, ensuring everything flows smoothly.</li>
+          </ul>
+        </section>
+      </div>
+    );
   }
 
-  return (
-    <div className="home-container">
-      <header className="hero-header" style={{ backgroundImage: `url(${planitHeaderImage})` }}>
-        <div className="hero-content">
-          <h1>Welcome to Eventro!</h1>
-          <p>
-            Event Planner is your one-stop solution to manage, plan, and track all your events.
-            Create, edit, and manage events, track guest lists, assign event locations, and organize various activities with ease.
-          </p>
-          <p>Log in to get started and start planning your next event!</p>
-        </div>
-      </header>
-
-      <section className="app-description">
-        <h2>Unleash the Full Potential of Your Events</h2>
-        <p>
-          Whether you're planning a small gathering or a large corporate event, <strong>Eventro</strong> is designed to
-          help you stay organized and focused on what truly matters — delivering an unforgettable experience.
-        </p>
-        <p>
-          <strong>Effortlessly manage your event from start to finish:</strong>
-        </p>
-        <ul>
-          <li><strong>Organize with Ease:</strong> Create events in seconds, set dates, and manage details like guest lists, venues, and more.</li>
-          <li><strong>Real-Time Tracking:</strong> Keep track of RSVPs and guest lists in real-time. Get instant updates on changes and responses.</li>
-          <li><strong>Customized Venue Assignment:</strong> Find the perfect venue for your event and assign it seamlessly, keeping everything in place.</li>
-          <li><strong>Plan Every Detail:</strong> From catering to entertainment, make sure every activity runs according to plan.</li>
-        </ul>
-        <p>
-          <strong>Eventro</strong> empowers you to streamline your event planning process so you can focus on creating meaningful connections
-          and unforgettable moments.
-        </p>
-        <p>
-          Ready to take your events to the next level? Sign up and start planning your next success today!
-        </p>
-      </section>
-
-      <section className="features">
-        <h2>Features</h2>
-        <ul>
-          <li><strong>Create, Edit, and Manage Events:</strong> Organize and modify your events easily.</li>
-          <li><strong>Track Guest Lists:</strong> Keep track of your event's guests and their RSVP status.</li>
-          <li><strong>Assign Event Locations:</strong> Assign specific locations for your events, ensuring everything runs smoothly.</li>
-          <li><strong>Organize Event-Related Activities:</strong> Plan and coordinate the activities that will take place during the event.</li>
-        </ul>
-      </section>
-    </div>
-  );
+  return null;
 }
