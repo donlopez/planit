@@ -281,7 +281,7 @@ body {
 }
 
 .sidebar ul li {
-  padding: 10px 15px; /* Adjusted padding to remove space above tabs */
+  padding: 10px 15px; /* Adjust padding to remove space above tabs */
   margin: 0; /* Remove margin to remove space above */
   border-bottom: 1px solid #444;
 }
@@ -339,5 +339,12 @@ body {
   .sidebar ul {
     display: block;
     padding-top: 10px; /* Ensure the sidebar items are aligned properly */
+  }
+}
+
+/* For Desktop View - Remove top padding space from sidebar links */
+@media (min-width: 769px) {
+  .sidebar ul li {
+    padding-top: 5px; /* Reduced padding on the top to eliminate space above tabs */
   }
 }

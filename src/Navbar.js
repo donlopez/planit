@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useMatch, useResolvedPath } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Import the Link component
 import Sidebar from './sidebar'; // Import the Sidebar component
 
 export default function Navbar({ auth }) {
@@ -26,9 +26,6 @@ export default function Navbar({ auth }) {
       </button>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <ul>
-        <CustomLink to="/planit">Planit</CustomLink>
-        <CustomLink to="/dashboard">Dashboard</CustomLink>
-        <CustomLink to="/profile">Profile</CustomLink>
         {auth.isAuthenticated ? (
           <li>
             <Link to="#" onClick={signOutRedirect} className="nav-link">Sign out</Link>
@@ -40,18 +37,5 @@ export default function Navbar({ auth }) {
         )}
       </ul>
     </nav>
-  );
-}
-
-function CustomLink({ to, children, ...props }) {
-  const resolvedPath = useResolvedPath(to);
-  const isActive = useMatch({ path: resolvedPath.pathname, end: true });
-
-  return (
-    <li className={isActive ? 'active' : ''}>
-      <Link to={to} {...props}>
-        {children}
-      </Link>
-    </li>
   );
 }
