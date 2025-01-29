@@ -243,15 +243,19 @@ body {
   }
 
   /* Ensure Sign In is visible */
-  .nav-link {
+  .auth-links {
     display: block;
-    padding: 0.5rem 1rem;
-    text-align: center;
+    width: 100%; /* Ensure it takes full width */
+    text-align: center; /* Center the Sign In/Out link */
   }
 
-  /* Force "Sign In" to be visible on mobile */
-  .nav ul li {
-    display: block; /* Ensure that the "Sign In" tab is not hidden */
+  .nav ul {
+    display: none; /* Hide the other navbar items on small screens */
+  }
+
+  .hamburger {
+    display: block;
+    z-index: 10000; /* Ensure it's above other content */
   }
 }
 

@@ -25,7 +25,9 @@ export default function Navbar({ auth }) {
         &#9776; {/* Hamburger icon */}
       </button>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <ul>
+      
+      {/* This ul will hold the "Sign In" / "Sign Out" link, and it will be visible on mobile */}
+      <ul className="auth-links">
         {auth.isAuthenticated ? (
           <li>
             <Link to="#" onClick={signOutRedirect} className="nav-link">Sign out</Link>
