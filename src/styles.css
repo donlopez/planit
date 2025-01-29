@@ -76,40 +76,74 @@ body {
   background-color: #777;
 }
 
-/* Hero Section Styles */
+/* Hero Content Styles */
 .hero-header {
-  background-size: cover;
-  background-position: center;
-  color: white;
-  padding: 100px 20px;
-  border-radius: 15px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Shadow effect */
-  position: relative;
-  text-align: center;
-  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  background-size: cover;
+  background-position: center;
+  color: white;
+  z-index: 1;
   flex-grow: 1;
 }
 
-/* Hero Content Styles */
 .hero-content {
   background-color: rgba(0, 0, 0, 0.6); /* Dark overlay for better text visibility */
   padding: 40px;
   border-radius: 15px;
-  display: inline-block;
   z-index: 2;
+  max-width: 90%; /* Ensure it doesn't overflow */
+  width: 100%; /* Allow it to shrink */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-shrink: 1; /* Allow shrinking */
 }
 
 .hero-content h1 {
   font-size: 3rem;
   margin-bottom: 20px;
+  line-height: 1.2;
+  font-weight: bold;
+  word-wrap: break-word;
 }
 
 .hero-content p {
   font-size: 1.2rem;
   margin-bottom: 10px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 20px;
+    max-width: 100%; /* Take up full width */
+  }
+
+  .hero-content h1 {
+    font-size: 2.5rem; /* Shrink heading on mobile */
+    margin-bottom: 15px;
+  }
+
+  .hero-content p {
+    font-size: 1rem; /* Shrink paragraph text */
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 2rem; /* Further shrink heading on small screens */
+  }
+
+  .hero-content p {
+    font-size: 0.9rem; /* Adjust paragraph text on small screens */
+  }
 }
 
 /* App Description Section Styles */
