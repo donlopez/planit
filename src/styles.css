@@ -248,6 +248,11 @@ body {
     padding: 0.5rem 1rem;
     text-align: center;
   }
+
+  /* Force "Sign In" to be visible on mobile */
+  .nav ul li {
+    display: block; /* Ensure that the "Sign In" tab is not hidden */
+  }
 }
 
 /* Sidebar Styles */
