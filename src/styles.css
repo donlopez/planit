@@ -105,11 +105,12 @@ body {
 }
 
 .hero-content h1 {
-  font-size: 3rem;
+  font-size: 5vw; /* Use viewport width to make the font responsive */
   margin-bottom: 20px;
   line-height: 1.2;
   font-weight: bold;
-  word-wrap: break-word;
+  word-wrap: break-word; /* Ensure the text wraps correctly */
+  max-width: 100%; /* Prevent overflow */
 }
 
 .hero-content p {
@@ -127,7 +128,7 @@ body {
   }
 
   .hero-content h1 {
-    font-size: 2.5rem; /* Shrink heading on mobile */
+    font-size: 7vw; /* Make the heading smaller on mobile */
     margin-bottom: 15px;
   }
 
@@ -138,7 +139,7 @@ body {
 
 @media (max-width: 480px) {
   .hero-content h1 {
-    font-size: 2rem; /* Further shrink heading on small screens */
+    font-size: 8vw; /* Further shrink heading on very small screens */
   }
 
   .hero-content p {
