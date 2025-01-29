@@ -1,27 +1,33 @@
-import { Link, useMatch, useResolvedPath } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useMatch, useResolvedPath } from 'react-router-dom';
+import Sidebar from './sidebar'; // Import the Sidebar component
 
 export default function Navbar({ auth }) {
-  // Sign-out redirection
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const signOutRedirect = () => {
     const clientId = "55b82psg55qubr8q6dmbrliq2u"; // Your Client ID from Cognito
     const logoutUri = "https://eventplanner.lopezbio.com"; // Correct logout URL
     const cognitoDomain = "https://us-east-1m61qxqqmo.auth.us-east-1.amazoncognito.com"; // Your Cognito User Pool domain
-    
-    // Remove the user session before redirecting
+
     auth.removeUser();
-    
-    // Redirect to Cognito logout
     window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
     <nav className="nav">
-      <Link to="/" className="site-title">
-        Eventro
-      </Link>
+      <Link to="/" className="site-title">Eventro</Link>
+      <button className="hamburger" onClick={toggleSidebar}>
+        &#9776; {/* Hamburger icon */}
+      </button>
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <ul>
         <CustomLink to="/planit">Planit</CustomLink>
-        <CustomLink to="/dashboard">Dashboard</CustomLink> {/* Added Dashboard link */}
+        <CustomLink to="/dashboard">Dashboard</CustomLink>
         <CustomLink to="/profile">Profile</CustomLink>
         {auth.isAuthenticated ? (
           <li>
@@ -42,7 +48,7 @@ function CustomLink({ to, children, ...props }) {
   const isActive = useMatch({ path: resolvedPath.pathname, end: true });
 
   return (
-    <li className={isActive ? "active" : ""}>
+    <li className={isActive ? 'active' : ''}>
       <Link to={to} {...props}>
         {children}
       </Link>
