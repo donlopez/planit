@@ -10,11 +10,14 @@ export default function EditEvent() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Log eventId to ensure it's being passed correctly
+  console.log("Fetching event with ID:", eventId);
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        // Log the eventId to ensure it's correct
-        console.log("Fetching event with ID:", eventId);
+        // Ensure the eventId is correct
+        console.log("Event ID for API call:", eventId);
 
         const response = await fetch(
           `https://7h9fkp906h.execute-api.us-east-1.amazonaws.com/dev/rds-connector-function?eventId=${eventId}`

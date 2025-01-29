@@ -42,6 +42,7 @@ export default function Dashboard() {
   }, [auth.isAuthenticated, auth.user]);
 
   const handleEditEvent = (eventId) => {
+    console.log("Navigating to edit event with ID:", eventId);  // Log eventId
     navigate(`/edit-event/${eventId}`);
   };
 
