@@ -42,7 +42,7 @@ export default function EditEvent() {
     };
 
     fetchEvent();
-  }, [eventId]);
+  }, [eventId]); // Re-run the effect if eventId changes
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,7 +59,7 @@ export default function EditEvent() {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...formData, eventId }),
+            body: JSON.stringify({ ...formData, eventId }), // Ensure eventId is passed
           }
         );
 
@@ -67,7 +67,7 @@ export default function EditEvent() {
           throw new Error("Failed to update event.");
         }
 
-        navigate("/dashboard"); // Navigate back to the dashboard after update
+        navigate("/dashboard"); // Navigate back to the dashboard after successful update
       } catch (err) {
         setError(err.message);
       }
@@ -79,7 +79,7 @@ export default function EditEvent() {
   return (
     <div>
       <h1>Edit Event</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>} {/* Display error message */}
 
       {eventData ? (
         <form onSubmit={handleUpdateEvent}>
@@ -140,7 +140,7 @@ export default function EditEvent() {
           <button type="submit">Save Changes</button>
         </form>
       ) : (
-        <p>Loading event...</p>
+        <p>Loading event...</p> // Display loading message if event data is not yet available
       )}
     </div>
   );
