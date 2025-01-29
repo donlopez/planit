@@ -30,7 +30,7 @@ body {
   position: sticky;
   top: 0;
   width: 100%;
-  padding-left: 50px; /* Make sure space for the hamburger icon */
+  padding-left: 50px; /* Make sure space for hamburger icon */
 }
 
 .site-title {
@@ -251,16 +251,21 @@ body {
 }
 
 /* Sidebar Styles */
+:root {
+  --sidebar-top: 77px; /* Adjust this value to perfectly position the sidebar */
+}
+
 .sidebar {
   position: fixed;
-  top: 60px; /* Ensure sidebar opens below navbar */
+  top: var(--sidebar-top); /* Use the variable for top position */
   left: -250px;
   width: 250px;
-  height: calc(100vh - 60px); /* Make sure sidebar fills the remaining screen space */
-  background-color: #333;
+  height: calc(100vh - var(--sidebar-top)); /* Ensure sidebar height doesn't overlap */
+  background-color: #000000;
   color: #fff;
   transition: left 0.3s ease;
   z-index: 9999;
+  overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
 .sidebar.open {
@@ -269,12 +274,15 @@ body {
 
 .sidebar ul {
   padding: 0;
-  list-style: none;
   margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column; /* Ensure vertical alignment */
 }
 
 .sidebar ul li {
-  padding: 15px;
+  padding: 10px 15px; /* Adjusted padding to remove space above tabs */
+  margin: 0; /* Remove margin to remove space above */
   border-bottom: 1px solid #444;
 }
 
@@ -282,6 +290,9 @@ body {
   color: white;
   text-decoration: none;
   display: block;
+  font-size: 1.2rem; /* Make sure the font size is consistent */
+  padding: 15px;
+  text-align: left;
 }
 
 .sidebar .close-btn {
@@ -295,9 +306,9 @@ body {
   cursor: pointer;
 }
 
-/* Profile Tab in Sidebar */
+/* Profile, Planit, and Dashboard Tab in Sidebar */
 .sidebar ul li a {
-  font-size: 1.2rem; /* Ensure tab text is large enough to read */
+  font-size: 1.2rem; /* Consistent font size for all sidebar links */
   padding: 15px;
   text-align: left;
 }
@@ -327,6 +338,6 @@ body {
 
   .sidebar ul {
     display: block;
-    padding-top: 10px; /* Make sidebar links stack properly */
+    padding-top: 10px; /* Ensure the sidebar items are aligned properly */
   }
 }
